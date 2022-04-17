@@ -1,0 +1,5 @@
+[workspace]
+members = [
+    "openpass-server",
+    "openpass-model",
+]
