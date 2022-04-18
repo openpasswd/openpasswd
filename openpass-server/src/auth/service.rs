@@ -7,12 +7,13 @@ use crate::{
     DynPgConnection,
 };
 use diesel::prelude::*;
-use log::{info, warn};
+use log::warn;
 use openpass_model::auth::{LoginRequest, UserRegister};
 
-use super::dto::Claims;
+use super::dto::auth_error::AuthError;
+use super::dto::claims::Claims;
 
-pub fn login(login: &LoginRequest, connection: DynPgConnection) -> Result<String, String> {
+pub fn login(login: &LoginRequest, connection: DynPgConnection) -> Result<String, AuthError> {
     let conn_guard = match connection.lock() {
         Ok(guard) => guard,
         Err(poisoned) => {
@@ -30,14 +31,14 @@ pub fn login(login: &LoginRequest, connection: DynPgConnection) -> Result<String
     };
 
     if result.len() == 0 {
-        return Err(String::from("Email or password is incorrect"));
+        return Err(AuthError::InvalidCredentials);
     }
 
     let user = result.first().unwrap();
 
     // TODO if users fail_attempts >= 5 and last_attempt < 10 min don't even try
     if false {
-        return Err(String::from("Email or password is incorrect"));
+        return Err(AuthError::InvalidCredentials);
     }
 
     if pwhash::sha512_crypt::verify(&login.password, &user.password) == false {
@@ -50,7 +51,7 @@ pub fn login(login: &LoginRequest, connection: DynPgConnection) -> Result<String
             .execute(&*conn_guard)
             .unwrap();
 
-        return Err(String::from("Email or password is incorrect"));
+        return Err(AuthError::InvalidCredentials);
     }
 
     // TODO clean up fail_attempts after 24h+ last_attemps
@@ -78,12 +79,12 @@ pub fn login(login: &LoginRequest, connection: DynPgConnection) -> Result<String
         &claims,
         &jsonwebtoken::EncodingKey::from_secret("secret".as_ref()),
     )
-    .map_err(|e| format!("{e}"))?;
+    .map_err(|e| AuthError::JwtEncode(e.to_string()))?;
 
     Ok(token)
 }
 
-pub fn register(user: &UserRegister, connection: DynPgConnection) -> Result<(), String> {
+pub fn register(user: &UserRegister, connection: DynPgConnection) -> Result<(), AuthError> {
     let conn_guard = match connection.lock() {
         Ok(guard) => guard,
         Err(poisoned) => {
@@ -101,7 +102,7 @@ pub fn register(user: &UserRegister, connection: DynPgConnection) -> Result<(), 
     };
 
     if result.len() > 0 {
-        return Err(String::from("Email already in use"));
+        return Err(AuthError::EmailAlreadyTaken);
     }
 
     let password = pwhash::sha512_crypt::hash(&user.password).unwrap();
