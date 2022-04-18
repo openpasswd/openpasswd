@@ -26,6 +26,9 @@ table! {
         name -> Varchar,
         email -> Varchar,
         password -> Text,
+        last_login -> Nullable<Timestamp>,
+        fail_attempts -> Int2,
+        last_attempt -> Nullable<Timestamp>,
     }
 }
 

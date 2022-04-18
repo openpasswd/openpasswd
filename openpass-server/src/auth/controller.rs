@@ -1,22 +1,31 @@
-use crate::{
-    core::validator::ValidatedJson,
-    dto::{AccessToken, UserRegister},
-    DynPgConnection,
-};
+use crate::{core::validator::ValidatedJson, DynPgConnection};
 use axum::{
     http::StatusCode,
     response::{IntoResponse, Response},
     Extension, Json,
 };
-use openpass_model::error::ErrorResponse;
+use openpass_model::{
+    auth::{AccessToken, LoginRequest, UserRegister},
+    error::ErrorResponse,
+};
 
-pub async fn token(ValidatedJson(user): ValidatedJson<UserRegister>) -> impl IntoResponse {
-    let token = AccessToken {
-        access_token: String::from("xxx"),
-        token_type: String::from("Bearer"),
-    };
+use super::dto::Claims;
 
-    (StatusCode::OK, Json(token))
+pub async fn token(
+    ValidatedJson(login): ValidatedJson<LoginRequest>,
+    Extension(connection): Extension<DynPgConnection>,
+) -> impl IntoResponse {
+    match super::service::login(&login, connection) {
+        Ok(access_token) => {
+            let token = AccessToken {
+                access_token,
+                token_type: String::from("Bearer"),
+            };
+
+            (StatusCode::OK, Json(token)).into_response()
+        }
+        Err(s) => (StatusCode::BAD_REQUEST, Json(ErrorResponse { error: s })).into_response(),
+    }
 }
 
 pub async fn register(
@@ -28,4 +37,13 @@ pub async fn register(
     } else {
         StatusCode::CREATED.into_response()
     }
+}
+
+pub async fn get_me(claims: Claims, Extension(connection): Extension<DynPgConnection>) -> Response {
+    todo!()
+    // if let Err(s) = super::service::register(&user, connection) {
+    //     (StatusCode::BAD_REQUEST, Json(ErrorResponse { error: s })).into_response()
+    // } else {
+    //     StatusCode::CREATED.into_response()
+    // }
 }

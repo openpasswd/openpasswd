@@ -4,8 +4,13 @@ CREATE TABLE users (
   id SERIAL PRIMARY KEY,
   name VARCHAR(100) NOT NULL,
   email VARCHAR(100) NOT NULL,
-  password TEXT NOT NULL
+  password TEXT NOT NULL,
+  last_login TIMESTAMP NULL,
+  fail_attempts SMALLINT NOT NULL DEFAULT(0),
+  last_attempt TIMESTAMP NULL
 );
+
+CREATE UNIQUE INDEX index_user_email on users(email);
 
 CREATE TABLE accounts (
   -- id INT PRIMARY KEY AUTO_INCREMENT,
@@ -25,7 +30,6 @@ CREATE TABLE devices (
   -- id INT PRIMARY KEY AUTO_INCREMENT,
   id SERIAL PRIMARY KEY,
   name VARCHAR(100) NOT NULL,
-  -- last_access DATETIME NOT NULL,
   last_access TIMESTAMP NOT NULL,
   active BOOLEAN NOT NULL,
   public_key TEXT NOT NULL,
@@ -35,3 +39,5 @@ CREATE TABLE devices (
          ON DELETE NO ACTION 
          ON UPDATE NO ACTION
 );
+
+CREATE UNIQUE INDEX index_devices_name on devices(name);

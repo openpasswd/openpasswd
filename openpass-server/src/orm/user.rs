@@ -1,11 +1,16 @@
+use std::time::SystemTime;
+
 use crate::orm::schema::users;
 
-#[derive(Queryable)]
+#[derive(Queryable, Identifiable)]
 pub struct User {
     pub id: i32,
     pub name: String,
     pub email: String,
     pub password: String,
+    pub last_login: Option<SystemTime>,
+    pub fail_attempts: i16,
+    pub last_attempt: Option<SystemTime>,
 }
 
 #[derive(Insertable)]

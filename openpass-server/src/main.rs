@@ -19,7 +19,6 @@ mod accounts;
 mod auth;
 mod core;
 mod devices;
-mod dto;
 mod orm;
 
 type DynPgConnection = Arc<Mutex<PgConnection>>;
@@ -36,7 +35,10 @@ async fn main() {
     let arc_connection = Arc::new(Mutex::new(connection)) as DynPgConnection;
     let app = Router::new()
         .route("/", get(health_check))
-        .route("/api/auth/user", post(auth::controller::register))
+        .route(
+            "/api/auth/user",
+            get(auth::controller::get_me).post(auth::controller::register),
+        )
         .route("/api/auth/token", post(auth::controller::token))
         .route("/api/accounts", get(accounts::list))
         .route("/api/accounts/:id", get(accounts::get))
@@ -44,7 +46,7 @@ async fn main() {
         .layer(Extension(arc_connection))
         .fallback(handler_404.into_service());
 
-    let addr = SocketAddr::from(([127, 0, 0, 1], 7777));
+    let addr = SocketAddr::from(([0, 0, 0, 0], 7777));
     log::info!("listening on {}", addr);
     axum::Server::bind(&addr)
         .serve(app.into_make_service())
