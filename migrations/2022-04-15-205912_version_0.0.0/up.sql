@@ -12,16 +12,32 @@ CREATE TABLE users (
 
 CREATE UNIQUE INDEX index_user_email on users(email);
 
+CREATE TABLE account_groups (
+  -- id INT PRIMARY KEY AUTO_INCREMENT,
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(50) NOT NULL,
+  user_id INT NOT NULL,
+  FOREIGN KEY (user_id) 
+      REFERENCES users (id) 
+         ON DELETE NO ACTION 
+         ON UPDATE NO ACTION
+);
+
 CREATE TABLE accounts (
   -- id INT PRIMARY KEY AUTO_INCREMENT,
   id SERIAL PRIMARY KEY,
   level INT NOT NULL,
-  name VARCHAR(100) NOT NULL,
+  name VARCHAR(50) NOT NULL,
   username VARCHAR(100) NOT NULL,
   password TEXT NOT NULL,
+  account_groups_id INT NOT NULL,
   user_id INT NOT NULL,
   FOREIGN KEY (user_id) 
       REFERENCES users (id) 
+         ON DELETE NO ACTION 
+         ON UPDATE NO ACTION,
+  FOREIGN KEY (account_groups_id) 
+      REFERENCES account_groups (id) 
          ON DELETE NO ACTION 
          ON UPDATE NO ACTION
 );
@@ -40,4 +56,4 @@ CREATE TABLE devices (
          ON UPDATE NO ACTION
 );
 
-CREATE UNIQUE INDEX index_devices_name on devices(name);
+CREATE UNIQUE INDEX index_devices_id_name on devices(id, name);

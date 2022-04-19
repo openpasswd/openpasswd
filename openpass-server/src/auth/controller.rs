@@ -1,4 +1,7 @@
-use super::dto::{auth_error::AuthResult, claims::Claims};
+use super::{
+    dto::{auth_error::AuthResult, claims::Claims},
+    service::AuthService,
+};
 use crate::{core::validator::ValidatedJson, DynPgConnection};
 use axum::{http::StatusCode, response::IntoResponse, Extension, Json};
 use openpass_model::auth::{AccessToken, LoginRequest, UserRegister};
@@ -7,7 +10,8 @@ pub async fn token(
     ValidatedJson(login): ValidatedJson<LoginRequest>,
     Extension(connection): Extension<DynPgConnection>,
 ) -> AuthResult<impl IntoResponse> {
-    let access_token = super::service::login(&login, connection)?;
+    let auth_service = AuthService::new(connection);
+    let access_token = auth_service.login(&login)?;
 
     let token = AccessToken {
         access_token,
@@ -21,7 +25,8 @@ pub async fn register(
     ValidatedJson(user): ValidatedJson<UserRegister>,
     Extension(connection): Extension<DynPgConnection>,
 ) -> AuthResult<impl IntoResponse> {
-    super::service::register(&user, connection)?;
+    let auth_service = AuthService::new(connection);
+    auth_service.register(&user)?;
     Ok(StatusCode::CREATED.into_response())
 }
 
@@ -29,10 +34,8 @@ pub async fn get_me(
     claims: Claims,
     Extension(connection): Extension<DynPgConnection>,
 ) -> AuthResult<impl IntoResponse> {
-    Ok(StatusCode::OK)
-    // if let Err(s) = super::service::register(&user, connection) {
-    //     (StatusCode::BAD_REQUEST, Json(ErrorResponse { error: s })).into_response()
-    // } else {
-    //     StatusCode::CREATED.into_response()
-    // }
+    let auth_service = AuthService::new(connection);
+    let user = auth_service.get_me(&claims.sub)?;
+
+    Ok((StatusCode::OK, Json(user)))
 }

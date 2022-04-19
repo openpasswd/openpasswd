@@ -9,7 +9,7 @@ use super::auth_error::AuthError;
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub struct Claims {
     pub sub: String,
-    pub device: String,
+    pub device: Option<String>,
     pub exp: usize,
 }
 
@@ -25,12 +25,12 @@ where
         let TypedHeader(Authorization(bearer)) =
             TypedHeader::<Authorization<Bearer>>::from_request(req)
                 .await
-                .map_err(|_| AuthError::InvalidToken)?;
+                .map_err(|_| AuthError::MissingCredentials)?;
         // Decode the user data
         let token_data = jsonwebtoken::decode::<Claims>(
             bearer.token(),
             &jsonwebtoken::DecodingKey::from_secret("secret".as_ref()),
-            &jsonwebtoken::Validation::default(),
+            &jsonwebtoken::Validation::new(jsonwebtoken::Algorithm::HS512),
         )
         .map_err(|_| AuthError::InvalidToken)?;
 

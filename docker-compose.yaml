@@ -5,16 +5,16 @@ services:
   #     - 3306:3306
   #   environment:
   #     - MYSQL_ROOT_PASSWORD=root
-  #     - MYSQL_DATABASE=openpass
+  #     - MYSQL_DATABASE=openpasswd
   #     - MYSQL_USER=open
-  #     - MYSQL_PASSWORD=vault
+  #     - MYSQL_PASSWORD=passwd
   postgres:
     image: postgres:14
     ports:
       - 5432:5432
     environment:
-      - POSTGRES_DB=openpass
+      - POSTGRES_DB=openpasswd
       - POSTGRES_USER=open
-      - POSTGRES_PASSWORD=vault
+      - POSTGRES_PASSWORD=passwd
       
       
