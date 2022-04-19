@@ -26,7 +26,7 @@ CREATE TABLE account_groups (
 CREATE TABLE accounts (
   -- id INT PRIMARY KEY AUTO_INCREMENT,
   id SERIAL PRIMARY KEY,
-  level INT NOT NULL,
+  level SMALLINT NOT NULL DEFAULT(0),
   name VARCHAR(50) NOT NULL,
   username VARCHAR(100) NOT NULL,
   password TEXT NOT NULL,

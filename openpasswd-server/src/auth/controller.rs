@@ -35,7 +35,7 @@ pub async fn get_me(
     Extension(connection): Extension<DynPgConnection>,
 ) -> AuthResult<impl IntoResponse> {
     let auth_service = AuthService::new(connection);
-    let user = auth_service.get_me(&claims.sub)?;
+    let user = auth_service.get_me(claims.sub)?;
 
     Ok((StatusCode::OK, Json(user)))
 }

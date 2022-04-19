@@ -2,11 +2,7 @@
 extern crate diesel;
 
 use axum::{
-    handler::Handler,
-    http::StatusCode,
-    response::IntoResponse,
-    routing::{get, post},
-    Extension, Router,
+    handler::Handler, http::StatusCode, response::IntoResponse, routing::get, Extension, Router,
 };
 use diesel::{Connection, PgConnection};
 use dotenvy::dotenv;
@@ -34,15 +30,10 @@ async fn main() {
 
     let arc_connection = Arc::new(Mutex::new(connection)) as DynPgConnection;
     let app = Router::new()
-        .route("/", get(health_check))
-        .route(
-            "/api/auth/user",
-            get(auth::controller::get_me).post(auth::controller::register),
-        )
-        .route("/api/auth/token", post(auth::controller::token))
-        .route("/api/accounts", get(accounts::list))
-        .route("/api/accounts/:id", get(accounts::get))
-        .route("/api/devices", get(devices::list))
+        .merge(root())
+        .merge(auth::route())
+        .merge(accounts::route())
+        .merge(devices::route())
         .layer(Extension(arc_connection))
         .fallback(handler_404.into_service());
 
@@ -52,6 +43,10 @@ async fn main() {
         .serve(app.into_make_service())
         .await
         .unwrap();
+}
+
+fn root() -> Router {
+    Router::new().route("/", get(health_check))
 }
 
 async fn health_check() -> impl IntoResponse {

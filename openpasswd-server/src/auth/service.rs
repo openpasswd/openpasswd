@@ -39,6 +39,22 @@ impl AuthService {
         }
     }
 
+    fn find_user_by_id(&self, id: i32, connection: &PgConnection) -> Option<User> {
+        let mut result = match users_dsl::users
+            .filter(users_dsl::id.eq(&id))
+            .load::<User>(connection)
+        {
+            Ok(result) => result,
+            Err(e) => panic!("{e}"),
+        };
+
+        if result.len() > 0 {
+            Some(result.remove(0))
+        } else {
+            None
+        }
+    }
+
     fn verify(&self, login_password: &str, user: &User, connection: &PgConnection) -> AuthResult {
         if pwhash::sha512_crypt::verify(login_password, &user.password) == false {
             diesel::update(users_dsl::users)
@@ -103,16 +119,17 @@ impl AuthService {
             .timestamp();
 
         let claims = Claims {
-            sub: user.email.to_string(),
+            sub: user.id,
             device: device_name,
             exp: expiration as usize,
         };
 
         let header = jsonwebtoken::Header::new(jsonwebtoken::Algorithm::HS512);
+        let secret = std::env::var("JWT_SECRET").expect("JWT_SECRET must be set");
         let token = jsonwebtoken::encode(
             &header,
             &claims,
-            &jsonwebtoken::EncodingKey::from_secret("secret".as_ref()),
+            &jsonwebtoken::EncodingKey::from_secret(secret.as_bytes()),
         )
         .map_err(|e| AuthError::JwtEncode(e.to_string()))?;
 
@@ -177,7 +194,7 @@ impl AuthService {
         Ok(())
     }
 
-    pub fn get_me(self, email: &str) -> Result<UserView, AuthError> {
+    pub fn get_me(self, id: i32) -> Result<UserView, AuthError> {
         let conn_guard = match self.connection.lock() {
             Ok(guard) => guard,
             Err(poisoned) => {
@@ -186,7 +203,7 @@ impl AuthService {
             }
         };
 
-        let user = match self.find_user_by_email(&email, &*conn_guard) {
+        let user = match self.find_user_by_id(id, &*conn_guard) {
             Some(user) => user,
             None => return Err(AuthError::WrongCredentials),
         };
