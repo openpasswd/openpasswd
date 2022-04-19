@@ -156,10 +156,9 @@ impl AuthService {
             }
         };
 
-        let user = match self.find_user_by_email(&user.email, &*conn_guard) {
-            Some(user) => user,
-            None => return Err(AuthError::EmailAlreadyTaken),
-        };
+        if self.find_user_by_email(&user.email, &*conn_guard).is_some() {
+            return Err(AuthError::EmailAlreadyTaken);
+        }
 
         let password = pwhash::sha512_crypt::hash(&user.password).unwrap();
 
