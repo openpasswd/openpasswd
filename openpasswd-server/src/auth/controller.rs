@@ -4,7 +4,7 @@ use super::{
 };
 use crate::{core::validator::ValidatedJson, DynPgConnection};
 use axum::{http::StatusCode, response::IntoResponse, Extension, Json};
-use openpass_model::auth::{AccessToken, LoginRequest, UserRegister};
+use openpasswd_model::auth::{AccessToken, LoginRequest, UserRegister};
 
 pub async fn token(
     ValidatedJson(login): ValidatedJson<LoginRequest>,

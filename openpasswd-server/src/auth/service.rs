@@ -12,7 +12,7 @@ use crate::{
 };
 use diesel::prelude::*;
 use log::warn;
-use openpass_model::auth::{LoginRequest, UserRegister, UserView};
+use openpasswd_model::auth::{LoginRequest, UserRegister, UserView};
 
 pub struct AuthService {
     connection: DynPgConnection,

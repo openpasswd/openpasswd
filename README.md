@@ -1,1 +1,1 @@
-# openpass
+# openpasswd
