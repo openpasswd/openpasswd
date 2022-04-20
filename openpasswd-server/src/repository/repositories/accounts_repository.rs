@@ -7,18 +7,12 @@ use crate::repository::Repository;
 use diesel::prelude::*;
 
 pub trait AccountsRepository {
-    fn accounts_(&self, user_id: i32) -> Option<String>;
     fn accounts_groups_list(&self, user_id: i32) -> Vec<AccountGroup>;
     fn accounts_insert(&self, account: NewAccount);
     fn accounts_groups_insert(&self, account_group: NewAccountGroup);
 }
 
 impl AccountsRepository for Repository {
-    fn accounts_(&self, user_id: i32) -> Option<String> {
-        let connection = &self.pool.get().unwrap();
-        todo!()
-    }
-
     fn accounts_groups_list(&self, user_id: i32) -> Vec<AccountGroup> {
         let connection = &self.pool.get().unwrap();
         match account_groups_dsl::account_groups
