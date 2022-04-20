@@ -1,6 +1,6 @@
 use std::time::SystemTime;
 
-use crate::orm::schema::devices;
+use crate::repository::schema::devices;
 
 #[derive(Queryable, Identifiable)]
 pub struct Device {

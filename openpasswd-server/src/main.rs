@@ -1,40 +1,32 @@
 #[macro_use]
 extern crate diesel;
 
+use crate::repository::Repository;
 use axum::{
     handler::Handler, http::StatusCode, response::IntoResponse, routing::get, Extension, Router,
 };
-use diesel::{Connection, PgConnection};
 use dotenvy::dotenv;
-use std::{
-    net::SocketAddr,
-    sync::{Arc, Mutex},
-};
+use std::net::SocketAddr;
 
 mod accounts;
 mod auth;
 mod core;
 mod devices;
-mod orm;
-
-type DynPgConnection = Arc<Mutex<PgConnection>>;
+mod repository;
 
 #[tokio::main]
 async fn main() {
     dotenv().ok();
     pretty_env_logger::init();
 
-    let database_url = std::env::var("DATABASE_URL").expect("DATABASE_URL must be set");
-    let connection = diesel::PgConnection::establish(&database_url)
-        .unwrap_or_else(|_| panic!("Error connecting to {}", database_url));
+    let repository = Repository::new();
 
-    let arc_connection = Arc::new(Mutex::new(connection)) as DynPgConnection;
     let app = Router::new()
         .merge(root())
         .merge(auth::route())
         .merge(accounts::route())
         .merge(devices::route())
-        .layer(Extension(arc_connection))
+        .layer(Extension(repository))
         .fallback(handler_404.into_service());
 
     let addr = SocketAddr::from(([0, 0, 0, 0], 7777));

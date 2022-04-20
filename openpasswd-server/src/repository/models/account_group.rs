@@ -1,5 +1,5 @@
-use crate::orm::schema::account_groups;
-use crate::orm::schema::accounts;
+use crate::repository::schema::account_groups;
+use crate::repository::schema::accounts;
 
 #[derive(Queryable, Identifiable)]
 pub struct AccountGroup {

@@ -1,6 +1,6 @@
 use std::time::SystemTime;
 
-use crate::orm::schema::users;
+use crate::repository::schema::users;
 
 #[derive(Queryable, Identifiable)]
 pub struct User {

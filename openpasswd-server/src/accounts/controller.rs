@@ -1,5 +1,5 @@
 use super::{dto::accounts_error::AccountResult, service::AccountService};
-use crate::{auth::dto::claims::Claims, core::validator::ValidatedJson, DynPgConnection};
+use crate::{auth::dto::claims::Claims, core::validator::ValidatedJson, repository::Repository};
 use axum::{http::StatusCode, response::IntoResponse, Extension, Json};
 use openpasswd_model::accounts::{AccountGroupRegister, AccountRegister};
 
@@ -10,18 +10,18 @@ use openpasswd_model::accounts::{AccountGroupRegister, AccountRegister};
 pub async fn register_group(
     claims: Claims,
     ValidatedJson(account_groups): ValidatedJson<AccountGroupRegister>,
-    Extension(connection): Extension<DynPgConnection>,
+    Extension(repository): Extension<Repository>,
 ) -> AccountResult<impl IntoResponse> {
-    let account_service = AccountService::new(connection);
+    let account_service = AccountService::new(repository);
     account_service.register_group(&account_groups, claims.sub)?;
     Ok(StatusCode::OK)
 }
 
 pub async fn list_groups(
     claims: Claims,
-    Extension(connection): Extension<DynPgConnection>,
+    Extension(repository): Extension<Repository>,
 ) -> AccountResult<impl IntoResponse> {
-    let account_service = AccountService::new(connection);
+    let account_service = AccountService::new(repository);
     let result = account_service.list_groups(claims.sub)?;
     Ok((StatusCode::OK, Json(result)))
 }
@@ -29,9 +29,9 @@ pub async fn list_groups(
 pub async fn register_account(
     claims: Claims,
     ValidatedJson(account): ValidatedJson<AccountRegister>,
-    Extension(connection): Extension<DynPgConnection>,
+    Extension(repository): Extension<Repository>,
 ) -> AccountResult<impl IntoResponse> {
-    let account_service = AccountService::new(connection);
+    let account_service = AccountService::new(repository);
     account_service.register_account(&account, claims.sub)?;
     Ok(StatusCode::OK)
 }
