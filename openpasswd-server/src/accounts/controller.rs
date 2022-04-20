@@ -13,8 +13,8 @@ pub async fn register_group(
     Extension(repository): Extension<Repository>,
 ) -> AccountResult<impl IntoResponse> {
     let account_service = AccountService::new(repository);
-    account_service.register_group(&account_groups, claims.sub)?;
-    Ok(StatusCode::OK)
+    let account_group = account_service.register_group(&account_groups, claims.sub)?;
+    Ok((StatusCode::OK, Json(account_group)))
 }
 
 pub async fn list_groups(
@@ -32,8 +32,17 @@ pub async fn register_account(
     Extension(repository): Extension<Repository>,
 ) -> AccountResult<impl IntoResponse> {
     let account_service = AccountService::new(repository);
-    account_service.register_account(&account, claims.sub)?;
-    Ok(StatusCode::OK)
+    let account = account_service.register_account(&account, claims.sub)?;
+    Ok((StatusCode::OK, Json(account)))
+}
+
+pub async fn list_accounts(
+    claims: Claims,
+    Extension(repository): Extension<Repository>,
+) -> AccountResult<impl IntoResponse> {
+    let account_service = AccountService::new(repository);
+    let result = account_service.list_accounts(claims.sub, None)?;
+    Ok((StatusCode::OK, Json(result)))
 }
 
 // pub async fn list() -> impl IntoResponse {

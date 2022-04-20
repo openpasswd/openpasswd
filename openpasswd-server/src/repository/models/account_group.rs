@@ -8,6 +8,17 @@ pub struct AccountGroup {
     pub user_id: i32,
 }
 
+#[derive(Queryable, Identifiable)]
+pub struct Account {
+    pub id: i32,
+    pub level: i16,
+    pub name: String,
+    pub username: String,
+    pub password: String,
+    pub account_groups_id: i32,
+    pub user_id: i32,
+}
+
 #[derive(Insertable)]
 #[table_name = "account_groups"]
 pub struct NewAccountGroup<'a> {

@@ -1,7 +1,9 @@
 use crate::repository::models::account_group::{NewAccount, NewAccountGroup};
 use crate::repository::repositories::accounts_repository::AccountsRepository;
 // use crate::orm::schema::accounts::dsl as accounts_dsl;
-use openpasswd_model::accounts::{AccountGroupRegister, AccountGroupView, AccountRegister};
+use openpasswd_model::accounts::{
+    AccountGroupRegister, AccountGroupView, AccountRegister, AccountView,
+};
 use openpasswd_model::List;
 
 use super::dto::accounts_error::AccountResult;
@@ -21,14 +23,25 @@ where
         AccountService { repository }
     }
 
-    pub fn register_group(self, account_group: &AccountGroupRegister, id: i32) -> AccountResult {
+    pub fn register_group(
+        self,
+        account_group: &AccountGroupRegister,
+        id: i32,
+    ) -> AccountResult<AccountGroupView> {
         let account_group = NewAccountGroup {
             name: account_group.name.as_ref(),
             user_id: id,
         };
 
-        self.repository.accounts_groups_insert(account_group);
-        Ok(())
+        let account_group = self
+            .repository
+            .accounts_groups_insert(account_group)
+            .unwrap();
+
+        Ok(AccountGroupView {
+            id: account_group.id,
+            name: account_group.name,
+        })
     }
 
     pub fn list_groups(self, user_id: i32) -> AccountResult<List<AccountGroupView>> {
@@ -38,6 +51,7 @@ where
             items: result
                 .iter()
                 .map(|r| AccountGroupView {
+                    id: r.id,
                     name: r.name.to_owned(),
                 })
                 .collect(),
@@ -45,17 +59,52 @@ where
         })
     }
 
-    pub fn register_account(self, account: &AccountRegister, id: i32) -> AccountResult {
+    pub fn register_account(
+        self,
+        account: &AccountRegister,
+        user_id: i32,
+    ) -> AccountResult<AccountView> {
         let account = NewAccount {
             name: account.name.as_ref(),
             level: account.level,
             account_groups_id: account.group_id,
             username: account.username.as_ref(),
             password: account.password.as_ref(),
-            user_id: id,
+            user_id,
         };
 
-        self.repository.accounts_insert(account);
-        Ok(())
+        let account = self.repository.accounts_insert(account).unwrap();
+        Ok(AccountView {
+            id: account.id,
+            name: account.name,
+            username: account.username,
+            password: None,
+        })
+    }
+
+    pub fn list_accounts(
+        self,
+        user_id: i32,
+        group_id: Option<i32>,
+    ) -> AccountResult<List<AccountView>> {
+        let result = if let Some(group_id) = group_id {
+            self.repository
+                .accounts_list_by_user_id_and_group_id(user_id, group_id)
+        } else {
+            self.repository.accounts_list_by_user_id(user_id)
+        };
+
+        Ok(List {
+            items: result
+                .iter()
+                .map(|r| AccountView {
+                    id: r.id,
+                    name: r.name.to_owned(),
+                    username: r.username.to_owned(),
+                    password: None,
+                })
+                .collect(),
+            total: result.len() as u32,
+        })
     }
 }

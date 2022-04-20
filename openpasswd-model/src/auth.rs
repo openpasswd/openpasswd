@@ -3,22 +3,22 @@ use validator::Validate;
 
 #[derive(Deserialize, Validate)]
 pub struct LoginRequest {
-    #[validate(length(min = 1, message = "Can not be empty"))]
+    #[validate(length(min = 1))]
     #[validate(email(message = "Email is invalid"))]
     pub email: String,
-    #[validate(length(min = 1, message = "Can not be empty"))]
+    #[validate(length(min = 1))]
     pub password: String,
     pub device_name: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Validate)]
 pub struct UserRegister {
-    #[validate(length(min = 1, message = "Can not be empty"))]
+    #[validate(length(min = 1))]
     pub name: String,
-    #[validate(length(min = 1, message = "Can not be empty"))]
+    #[validate(length(min = 1))]
     #[validate(email(message = "Email is invalid"))]
     pub email: String,
-    #[validate(length(min = 1, message = "Can not be empty"))]
+    #[validate(length(min = 1))]
     pub password: String,
 }
 
