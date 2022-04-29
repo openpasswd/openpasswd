@@ -69,7 +69,9 @@ impl IntoResponse for ServerError {
                 };
                 (
                     StatusCode::BAD_REQUEST,
-                    Json(ErrorResponse { error: message }),
+                    Json(ErrorResponse {
+                        error: HashMap::from([(String::from("message"), message)]),
+                    }),
                 )
                     .into_response()
             }

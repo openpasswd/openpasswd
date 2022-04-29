@@ -6,7 +6,7 @@ pub struct LoginRequest {
     #[validate(length(min = 1))]
     #[validate(email(message = "Email is invalid"))]
     pub email: String,
-    #[validate(length(min = 1))]
+    #[validate(length(min = 1, message = "Password is invalid"))]
     pub password: String,
     pub device_name: Option<String>,
 }

@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use axum::{
     http::StatusCode,
     response::{IntoResponse, Response},
@@ -50,7 +52,7 @@ impl IntoResponse for AuthError {
             ),
         };
         let body = Json(ErrorResponse {
-            error: error_message,
+            error: HashMap::from([(String::from("message"), error_message)]),
         });
         (status, body).into_response()
     }
