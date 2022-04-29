@@ -1,4 +1,4 @@
-use crate::repository::models::account_group::{NewAccount, NewAccountGroup};
+use crate::repository::models::account::{NewAccount, NewAccountGroup, NewAccountPassword};
 use crate::repository::repositories::accounts_repository::AccountsRepository;
 // use crate::orm::schema::accounts::dsl as accounts_dsl;
 use openpasswd_model::accounts::{
@@ -64,20 +64,33 @@ where
         account: &AccountRegister,
         user_id: i32,
     ) -> AccountResult<AccountView> {
-        let account = NewAccount {
+        let new_account = NewAccount {
             name: account.name.as_ref(),
             level: account.level,
             account_groups_id: account.group_id,
-            username: account.username.as_ref(),
-            password: account.password.as_ref(),
+
             user_id,
         };
 
-        let account = self.repository.accounts_insert(account).unwrap();
+        let db_account = self.repository.accounts_insert(new_account).unwrap();
+
+        let created_date: std::time::SystemTime = chrono::Utc::now().into();
+        let account_password = NewAccountPassword {
+            account_id: db_account.id,
+            username: account.username.as_ref(),
+            password: account.password.as_ref(),
+            created_date,
+        };
+
+        let db_account_password = self
+            .repository
+            .account_passwords_insert(account_password)
+            .unwrap();
+
         Ok(AccountView {
-            id: account.id,
-            name: account.name,
-            username: account.username,
+            id: db_account.id,
+            name: db_account.name,
+            username: db_account_password.username,
             password: None,
         })
     }
@@ -100,7 +113,7 @@ where
                 .map(|r| AccountView {
                     id: r.id,
                     name: r.name.to_owned(),
-                    username: r.username.to_owned(),
+                    username: todo!(),
                     password: None,
                 })
                 .collect(),

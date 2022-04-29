@@ -1,3 +1,3 @@
-pub mod account_group;
+pub mod account;
 pub mod device;
 pub mod user;

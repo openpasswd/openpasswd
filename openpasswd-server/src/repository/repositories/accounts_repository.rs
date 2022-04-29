@@ -1,10 +1,12 @@
 use std::collections::VecDeque;
 
-use crate::repository::models::account_group::{
-    Account, AccountGroup, NewAccount, NewAccountGroup,
+use crate::repository::models::account::{
+    Account, AccountGroup, AccountPassword, NewAccount, NewAccountGroup, NewAccountPassword,
 };
 use crate::repository::schema::account_groups;
 use crate::repository::schema::account_groups::dsl as account_groups_dsl;
+use crate::repository::schema::account_passwords;
+use crate::repository::schema::account_passwords::dsl as account_passwords_dsl;
 use crate::repository::schema::accounts;
 use crate::repository::schema::accounts::dsl as accounts_dsl;
 use crate::repository::Repository;
@@ -19,6 +21,12 @@ pub trait AccountsRepository {
     fn accounts_insert(&self, account: NewAccount) -> Result<Account, ()>;
     fn accounts_list_by_user_id(&self, user_id: i32) -> Vec<Account>;
     fn accounts_list_by_user_id_and_group_id(&self, user_id: i32, group_id: i32) -> Vec<Account>;
+
+    fn account_passwords_insert(
+        &self,
+        account_password: NewAccountPassword,
+    ) -> Result<AccountPassword, ()>;
+    fn accounts_passwords_list_account_id(&self, account_id: i32) -> Vec<AccountPassword>;
 }
 
 impl AccountsRepository for Repository {
@@ -90,6 +98,7 @@ impl AccountsRepository for Repository {
 
     fn accounts_list_by_user_id(&self, user_id: i32) -> Vec<Account> {
         let connection = &self.pool.get().unwrap();
+
         match accounts_dsl::accounts
             .filter(accounts_dsl::user_id.eq(user_id))
             .load::<Account>(connection)
@@ -108,6 +117,33 @@ impl AccountsRepository for Repository {
                     .and(accounts_dsl::account_groups_id.eq(group_id)),
             )
             .load::<Account>(connection)
+        {
+            Ok(result) => result,
+            Err(e) => panic!("{e}"),
+        }
+    }
+
+    fn account_passwords_insert(
+        &self,
+        account_password: NewAccountPassword,
+    ) -> Result<AccountPassword, ()> {
+        let connection = &self.pool.get().unwrap();
+        let account = match diesel::insert_into(account_passwords::table)
+            .values(account_password)
+            .get_result(connection)
+        {
+            Ok(result) => result,
+            Err(e) => panic!("{e}"),
+        };
+
+        Ok(account)
+    }
+
+    fn accounts_passwords_list_account_id(&self, account_id: i32) -> Vec<AccountPassword> {
+        let connection = &self.pool.get().unwrap();
+        match account_passwords_dsl::account_passwords
+            .filter(account_passwords_dsl::account_id.eq(account_id))
+            .load::<AccountPassword>(connection)
         {
             Ok(result) => result,
             Err(e) => panic!("{e}"),
