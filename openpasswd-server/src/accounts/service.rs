@@ -72,6 +72,7 @@ where
             user_id,
         };
 
+        // TODO: Check error when account_groups_id doesn't exists
         let db_account = self.repository.accounts_insert(new_account).unwrap();
 
         let created_date: std::time::SystemTime = chrono::Utc::now().into();
@@ -82,7 +83,7 @@ where
             created_date,
         };
 
-        let db_account_password = self
+        let _ = self
             .repository
             .account_passwords_insert(account_password)
             .unwrap();
@@ -90,8 +91,7 @@ where
         Ok(AccountView {
             id: db_account.id,
             name: db_account.name,
-            username: db_account_password.username,
-            password: None,
+            group_id: db_account.account_groups_id,
         })
     }
 
@@ -113,8 +113,7 @@ where
                 .map(|r| AccountView {
                     id: r.id,
                     name: r.name.to_owned(),
-                    username: todo!(),
-                    password: None,
+                    group_id: r.account_groups_id,
                 })
                 .collect(),
             total: result.len() as u32,

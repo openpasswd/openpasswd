@@ -1,6 +1,8 @@
+use std::collections::HashMap;
+
 use super::{dto::accounts_error::AccountResult, service::AccountService};
 use crate::{auth::dto::claims::Claims, core::validator::ValidatedJson, repository::Repository};
-use axum::{http::StatusCode, response::IntoResponse, Extension, Json};
+use axum::{extract::Query, http::StatusCode, response::IntoResponse, Extension, Json};
 use openpasswd_model::accounts::{AccountGroupRegister, AccountRegister};
 
 // use axum::{extract::Path, http::StatusCode, response::IntoResponse, Json};
@@ -38,10 +40,20 @@ pub async fn register_account(
 
 pub async fn list_accounts(
     claims: Claims,
+    Query(params): Query<HashMap<String, String>>,
     Extension(repository): Extension<Repository>,
 ) -> AccountResult<impl IntoResponse> {
     let account_service = AccountService::new(repository);
-    let result = account_service.list_accounts(claims.sub, None)?;
+    let group_id = if let Some(group_id) = params.get("group_id") {
+        if let Ok(group_id) = group_id.parse::<i32>() {
+            Some(group_id)
+        } else {
+            None
+        }
+    } else {
+        None
+    };
+    let result = account_service.list_accounts(claims.sub, group_id)?;
     Ok((StatusCode::OK, Json(result)))
 }
 

@@ -30,6 +30,5 @@ pub struct AccountRegister {
 pub struct AccountView {
     pub id: i32,
     pub name: String,
-    pub username: String,
-    pub password: Option<String>,
+    pub group_id: i32,
 }
