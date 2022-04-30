@@ -24,9 +24,9 @@ CREATE TABLE account_groups (
 CREATE TABLE accounts (
   id SERIAL PRIMARY KEY,
   user_id INT NOT NULL,
+  account_groups_id INT NOT NULL,
   level SMALLINT NOT NULL DEFAULT(0),
   name VARCHAR(50) NOT NULL,
-  account_groups_id INT NOT NULL,
   FOREIGN KEY (user_id) 
       REFERENCES users (id) 
          ON DELETE NO ACTION 

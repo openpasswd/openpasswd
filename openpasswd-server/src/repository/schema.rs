@@ -20,9 +20,9 @@ table! {
     accounts (id) {
         id -> Int4,
         user_id -> Int4,
+        account_groups_id -> Int4,
         level -> Int2,
         name -> Varchar,
-        account_groups_id -> Int4,
     }
 }
 

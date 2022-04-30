@@ -15,9 +15,9 @@ pub struct AccountGroup {
 pub struct Account {
     pub id: i32,
     pub user_id: i32,
+    pub account_groups_id: i32,
     pub level: i16,
     pub name: String,
-    pub account_groups_id: i32,
 }
 
 #[derive(Queryable, Identifiable)]
