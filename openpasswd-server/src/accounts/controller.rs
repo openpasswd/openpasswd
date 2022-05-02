@@ -16,7 +16,7 @@ pub async fn register_group(
 ) -> AccountResult<impl IntoResponse> {
     let account_service = AccountService::new(repository);
     let account_group = account_service.register_group(&account_groups, claims.sub)?;
-    Ok((StatusCode::OK, Json(account_group)))
+    Ok((StatusCode::CREATED, Json(account_group)))
 }
 
 pub async fn list_groups(
@@ -35,7 +35,7 @@ pub async fn register_account(
 ) -> AccountResult<impl IntoResponse> {
     let account_service = AccountService::new(repository);
     let account = account_service.register_account(&account, claims.sub)?;
-    Ok((StatusCode::OK, Json(account)))
+    Ok((StatusCode::CREATED, Json(account)))
 }
 
 pub async fn list_accounts(

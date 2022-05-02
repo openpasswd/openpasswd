@@ -6,7 +6,7 @@ use openpasswd_model::accounts::{
 };
 use openpasswd_model::List;
 
-use super::dto::accounts_error::AccountResult;
+use super::dto::accounts_error::{AccountError, AccountResult};
 
 pub struct AccountService<T>
 where
@@ -64,6 +64,14 @@ where
         account: &AccountRegister,
         user_id: i32,
     ) -> AccountResult<AccountView> {
+        let groups = self
+            .repository
+            .accounts_groups_find_by_id_and_user_id(account.group_id, user_id);
+
+        if groups.is_none() {
+            return Err(AccountError::InvalidAccountGroup);
+        }
+
         let new_account = NewAccount {
             name: account.name.as_ref(),
             level: account.level,
@@ -72,7 +80,6 @@ where
             user_id,
         };
 
-        // TODO: Check error when account_groups_id doesn't exists
         let db_account = self.repository.accounts_insert(new_account).unwrap();
 
         let created_date: std::time::SystemTime = chrono::Utc::now().into();
