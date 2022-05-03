@@ -10,6 +10,7 @@ pub fn route() -> Router {
             "/api/accounts",
             get(self::controller::list_accounts).post(self::controller::register_account),
         )
+        .route("/api/accounts/:id", get(self::controller::get_account))
         .route(
             "/api/accounts/groups",
             get(self::controller::list_groups).post(self::controller::register_group),

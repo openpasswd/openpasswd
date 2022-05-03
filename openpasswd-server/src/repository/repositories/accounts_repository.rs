@@ -1,7 +1,8 @@
 use std::collections::VecDeque;
 
 use crate::repository::models::account::{
-    Account, AccountGroup, AccountPassword, NewAccount, NewAccountGroup, NewAccountPassword,
+    Account, AccountGroup, AccountPassword, AccountWithPassword, NewAccount, NewAccountGroup,
+    NewAccountPassword,
 };
 use crate::repository::schema::account_groups;
 use crate::repository::schema::account_groups::dsl as account_groups_dsl;
@@ -21,6 +22,11 @@ pub trait AccountsRepository {
     fn accounts_insert(&self, account: NewAccount) -> Result<Account, ()>;
     fn accounts_list_by_user_id(&self, user_id: i32) -> Vec<Account>;
     fn accounts_list_by_user_id_and_group_id(&self, user_id: i32, group_id: i32) -> Vec<Account>;
+    fn accounts_get_with_password_by_id_and_user_id(
+        &self,
+        account_id: i32,
+        user_id: i32,
+    ) -> Option<AccountWithPassword>;
 
     fn account_passwords_insert(
         &self,
@@ -121,6 +127,50 @@ impl AccountsRepository for Repository {
             Ok(result) => result,
             Err(e) => panic!("{e}"),
         }
+    }
+
+    fn accounts_get_with_password_by_id_and_user_id(
+        &self,
+        account_id: i32,
+        user_id: i32,
+    ) -> Option<AccountWithPassword> {
+        let connection = &self.pool.get().unwrap();
+        // TODO: Join it better =D, I want to use sqlx
+
+        let mut result = match accounts_dsl::accounts
+            .filter(
+                accounts_dsl::id
+                    .eq(&account_id)
+                    .and(accounts_dsl::user_id.eq(user_id)),
+            )
+            .load::<Account>(connection)
+        {
+            Ok(result) => result,
+            Err(e) => panic!("{e}"),
+        };
+
+        let account = if result.len() > 0 {
+            result.remove(0)
+        } else {
+            return None;
+        };
+
+        let passwords = match account_passwords_dsl::account_passwords
+            .filter(account_passwords_dsl::account_id.eq(account_id))
+            .load::<AccountPassword>(connection)
+        {
+            Ok(result) => result,
+            Err(e) => panic!("{e}"),
+        };
+
+        Some(AccountWithPassword {
+            id: account.id,
+            user_id: account.user_id,
+            account_groups_id: account.account_groups_id,
+            level: account.level,
+            name: account.name,
+            passwords,
+        })
     }
 
     fn account_passwords_insert(

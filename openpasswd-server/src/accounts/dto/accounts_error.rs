@@ -13,6 +13,7 @@ pub type AccountResult<T = ()> = Result<T, AccountError>;
 #[derive(Debug)]
 pub enum AccountError {
     InvalidAccountGroup,
+    NotFound,
 }
 
 impl IntoResponse for AccountError {
@@ -22,6 +23,7 @@ impl IntoResponse for AccountError {
                 StatusCode::BAD_REQUEST,
                 String::from("Invalid Account Group"),
             ),
+            AccountError::NotFound => (StatusCode::NOT_FOUND, String::from("Invalid Path")),
         };
         let body = Json(ErrorResponse {
             error: HashMap::from([(String::from("message"), error_message)]),

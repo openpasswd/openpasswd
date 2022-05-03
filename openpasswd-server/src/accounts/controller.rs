@@ -2,7 +2,12 @@ use std::collections::HashMap;
 
 use super::{dto::accounts_error::AccountResult, service::AccountService};
 use crate::{auth::dto::claims::Claims, core::validator::ValidatedJson, repository::Repository};
-use axum::{extract::Query, http::StatusCode, response::IntoResponse, Extension, Json};
+use axum::{
+    extract::{Path, Query},
+    http::StatusCode,
+    response::{IntoResponse, Response},
+    Extension, Json,
+};
 use openpasswd_model::accounts::{AccountGroupRegister, AccountRegister};
 
 // use axum::{extract::Path, http::StatusCode, response::IntoResponse, Json};
@@ -54,6 +59,16 @@ pub async fn list_accounts(
         None
     };
     let result = account_service.list_accounts(claims.sub, group_id)?;
+    Ok((StatusCode::OK, Json(result)))
+}
+
+pub async fn get_account(
+    claims: Claims,
+    Path(account_id): Path<i32>,
+    Extension(repository): Extension<Repository>,
+) -> AccountResult<impl IntoResponse> {
+    let account_service = AccountService::new(repository);
+    let result = account_service.get_account(claims.sub, account_id)?;
     Ok((StatusCode::OK, Json(result)))
 }
 

@@ -32,3 +32,11 @@ pub struct AccountView {
     pub name: String,
     pub group_id: i32,
 }
+
+#[derive(Serialize)]
+pub struct AccountWithPasswordView {
+    pub id: i32,
+    pub name: String,
+    pub username: String,
+    pub password: String,
+}

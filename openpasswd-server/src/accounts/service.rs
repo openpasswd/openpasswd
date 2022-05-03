@@ -1,8 +1,10 @@
-use crate::repository::models::account::{NewAccount, NewAccountGroup, NewAccountPassword};
+use crate::repository::models::account::{
+    Account, NewAccount, NewAccountGroup, NewAccountPassword,
+};
 use crate::repository::repositories::accounts_repository::AccountsRepository;
 // use crate::orm::schema::accounts::dsl as accounts_dsl;
 use openpasswd_model::accounts::{
-    AccountGroupRegister, AccountGroupView, AccountRegister, AccountView,
+    AccountGroupRegister, AccountGroupView, AccountRegister, AccountView, AccountWithPasswordView,
 };
 use openpasswd_model::List;
 
@@ -125,5 +127,32 @@ where
                 .collect(),
             total: result.len() as u32,
         })
+    }
+
+    pub fn get_account(
+        self,
+        user_id: i32,
+        account_id: i32,
+    ) -> AccountResult<AccountWithPasswordView> {
+        let result = self
+            .repository
+            .accounts_get_with_password_by_id_and_user_id(account_id, user_id);
+
+        let account = result.ok_or(AccountError::NotFound)?;
+        if let Some(last_password) = account.passwords.last() {
+            Ok(AccountWithPasswordView {
+                id: account.id,
+                name: account.name,
+                username: last_password.username.to_owned(),
+                password: last_password.password.to_owned(),
+            })
+        } else {
+            Ok(AccountWithPasswordView {
+                id: account.id,
+                name: account.name,
+                username: "".to_owned(),
+                password: "".to_owned(),
+            })
+        }
     }
 }
