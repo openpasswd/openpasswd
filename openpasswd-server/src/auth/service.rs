@@ -4,6 +4,8 @@ use crate::repository::models::user::{NewUser, User};
 use crate::repository::repositories::devices_repository::DevicesRepository;
 use crate::repository::repositories::users_repository::UsersRepository;
 use openpasswd_model::auth::{LoginRequest, UserRegister, UserView};
+use rand::distributions::Alphanumeric;
+use rand::Rng;
 
 pub struct AuthService<T>
 where
@@ -21,12 +23,12 @@ where
     }
 
     fn verify(&self, login_password: &str, user: &User) -> AuthResult {
-        if pwhash::sha512_crypt::verify(login_password, &user.password) == false {
+        if argon2::verify_encoded(&user.password, login_password.as_bytes()).unwrap() {
+            Ok(())
+        } else {
             self.repository
                 .users_update_fail_attempts(user.id, user.fail_attempts + 1);
             Err(AuthError::InvalidCredentials)
-        } else {
-            Ok(())
         }
     }
 
@@ -88,7 +90,11 @@ where
             return Err(AuthError::EmailAlreadyTaken);
         }
 
-        let password = pwhash::sha512_crypt::hash(&user.password).unwrap();
+        let mut rng = rand::thread_rng();
+        let salt: Vec<u8> = (&mut rng).sample_iter(Alphanumeric).take(12).collect();
+        let config = argon2::Config::default();
+
+        let password = argon2::hash_encoded(user.password.as_bytes(), &salt, &config).unwrap();
 
         let new_user = NewUser {
             name: &user.name,
