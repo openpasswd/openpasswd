@@ -4,6 +4,7 @@ CREATE TABLE users (
   name VARCHAR(100) NOT NULL,
   email VARCHAR(100) NOT NULL,
   password TEXT NOT NULL,
+  master_key VARCHAR(32) NULL,
   last_login TIMESTAMP NULL,
   fail_attempts SMALLINT NOT NULL DEFAULT(0),
   last_attempt TIMESTAMP NULL

@@ -96,10 +96,14 @@ where
 
         let password = argon2::hash_encoded(user.password.as_bytes(), &salt, &config).unwrap();
 
+        let id = uuid::Uuid::new_v4();
+        let master_key = id.simple().to_string();
+
         let new_user = NewUser {
             name: &user.name,
             email: &user.email,
             password: &password,
+            master_key: Some(&master_key),
         };
 
         self.repository.users_insert(new_user);

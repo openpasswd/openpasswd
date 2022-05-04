@@ -8,6 +8,10 @@ services:
   #     - MYSQL_DATABASE=openpasswd
   #     - MYSQL_USER=open
   #     - MYSQL_PASSWORD=passwd
+  redis:
+    image: redis:7-alpine
+    ports:
+      - 6379:6379
   postgres:
     image: postgres:14
     ports:

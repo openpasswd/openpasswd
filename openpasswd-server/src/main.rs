@@ -3,7 +3,7 @@ extern crate diesel;
 #[macro_use]
 extern crate diesel_migrations;
 
-use crate::repository::Repository;
+use crate::{core::cache::Cache, repository::Repository};
 use axum::{
     handler::Handler,
     http::{HeaderValue, Method, StatusCode},
@@ -30,12 +30,15 @@ async fn main() {
     let repository = Repository::new();
     repository.migration_run();
 
+    let cache = Cache::new().unwrap();
+
     let mut app = Router::new()
         .merge(root())
         .merge(auth::route())
         .merge(accounts::route())
         .merge(devices::route())
         .layer(Extension(repository))
+        .layer(Extension(cache))
         .fallback(handler_404.into_service());
 
     if let Ok(allow_origin) = std::env::var("CORS_ALLOW_ORIGIN") {
@@ -64,11 +67,24 @@ async fn main() {
 }
 
 fn root() -> Router {
-    Router::new().route("/", get(health_check))
+    Router::new()
+        .route("/", get(health_check))
+        .route("/cache", get(cache_check))
 }
 
 async fn health_check() -> impl IntoResponse {
     (StatusCode::OK, "Health Check")
+}
+
+async fn cache_check(Extension(cache): Extension<Cache>) -> impl IntoResponse {
+    let key = uuid::Uuid::new_v4().to_string();
+    let created_date = chrono::Utc::now();
+    let value = created_date.to_rfc3339();
+    cache.set_and_expire(&key, value, 15).await;
+
+    let result: String = cache.get(&key).await.unwrap();
+
+    (StatusCode::OK, result)
 }
 
 async fn handler_404() -> impl IntoResponse {
