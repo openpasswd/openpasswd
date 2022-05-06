@@ -34,7 +34,7 @@ pub struct AccountPassword {
     pub id: i32,
     pub account_id: i32,
     pub username: String,
-    pub password: String,
+    pub password: Vec<u8>,
     pub created_date: SystemTime,
 }
 
@@ -59,6 +59,6 @@ pub struct NewAccount<'a> {
 pub struct NewAccountPassword<'a> {
     pub account_id: i32,
     pub username: &'a str,
-    pub password: &'a str,
+    pub password: &'a [u8],
     pub created_date: SystemTime,
 }

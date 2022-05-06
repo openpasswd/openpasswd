@@ -1,5 +1,6 @@
 use deadpool_redis::{Config, Pool, Runtime};
 use redis::{AsyncCommands, FromRedisValue, ToRedisArgs};
+use std::future::Future;
 
 pub struct Cache {
     pool: Pool,
@@ -44,5 +45,20 @@ impl Cache {
         let mut conn = self.pool.get().await.unwrap();
         let _: () = conn.set(key, value).await.unwrap();
         conn.expire(key, seconds).await.unwrap()
+    }
+
+    pub async fn get_or_set<T, F, Fut>(&self, key: &str, f: F) -> T
+    where
+        T: FromRedisValue + ToRedisArgs + Send + Sync,
+        F: FnOnce() -> Fut,
+        Fut: Future<Output = T>,
+    {
+        if let Some(value) = self.get(key).await {
+            value
+        } else {
+            let value = f().await;
+            self.set(key, &value).await;
+            value
+        }
     }
 }

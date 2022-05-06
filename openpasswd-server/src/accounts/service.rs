@@ -1,7 +1,9 @@
+use crate::core::cryptography::{AesGcmCipher, Cipher};
 use crate::repository::models::account::{
     Account, NewAccount, NewAccountGroup, NewAccountPassword,
 };
 use crate::repository::repositories::accounts_repository::AccountsRepository;
+use crate::repository::repositories::users_repository::UsersRepository;
 // use crate::orm::schema::accounts::dsl as accounts_dsl;
 use openpasswd_model::accounts::{
     AccountGroupRegister, AccountGroupView, AccountRegister, AccountView, AccountWithPasswordView,
@@ -12,14 +14,14 @@ use super::dto::accounts_error::{AccountError, AccountResult};
 
 pub struct AccountService<T>
 where
-    T: AccountsRepository,
+    T: AccountsRepository + UsersRepository,
 {
     repository: T,
 }
 
 impl<T> AccountService<T>
 where
-    T: AccountsRepository,
+    T: AccountsRepository + UsersRepository,
 {
     pub fn new(repository: T) -> AccountService<T> {
         AccountService { repository }
@@ -74,6 +76,14 @@ where
             return Err(AccountError::InvalidAccountGroup);
         }
 
+        let master_key = self
+            .repository
+            .users_find_by_id(user_id)
+            .unwrap()
+            .master_key
+            .unwrap();
+        let cipher = AesGcmCipher::new(&master_key);
+
         let new_account = NewAccount {
             name: account.name.as_ref(),
             level: account.level,
@@ -84,11 +94,12 @@ where
 
         let db_account = self.repository.accounts_insert(new_account).unwrap();
 
+        let password = cipher.encrypt(&account.password);
         let created_date: std::time::SystemTime = chrono::Utc::now().into();
         let account_password = NewAccountPassword {
             account_id: db_account.id,
             username: account.username.as_ref(),
-            password: account.password.as_ref(),
+            password: &password,
             created_date,
         };
 
@@ -138,13 +149,21 @@ where
             .repository
             .accounts_get_with_password_by_id_and_user_id(account_id, user_id);
 
+        let master_key = self
+            .repository
+            .users_find_by_id(user_id)
+            .unwrap()
+            .master_key
+            .unwrap();
+        let cipher = AesGcmCipher::new(&master_key);
+
         let account = result.ok_or(AccountError::NotFound)?;
         if let Some(last_password) = account.passwords.last() {
             Ok(AccountWithPasswordView {
                 id: account.id,
                 name: account.name,
                 username: last_password.username.to_owned(),
-                password: last_password.password.to_owned(),
+                password: cipher.decrypt(&last_password.password),
             })
         } else {
             Ok(AccountWithPasswordView {

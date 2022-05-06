@@ -11,7 +11,7 @@ table! {
         id -> Int4,
         account_id -> Int4,
         username -> Varchar,
-        password -> Text,
+        password -> Bytea,
         created_date -> Timestamp,
     }
 }

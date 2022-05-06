@@ -42,7 +42,7 @@ CREATE TABLE account_passwords (
   id SERIAL PRIMARY KEY,
   account_id INT NOT NULL,
   username VARCHAR(100) NOT NULL,
-  password TEXT NOT NULL,
+  password BYTEA NOT NULL,
   created_date TIMESTAMP NOT NULL,
   FOREIGN KEY (account_id) 
       REFERENCES accounts (id) 
