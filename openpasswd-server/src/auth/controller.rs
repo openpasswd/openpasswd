@@ -2,30 +2,39 @@ use super::{
     dto::{auth_error::AuthResult, claims::Claims},
     service::AuthService,
 };
-use crate::{core::validator::ValidatedJson, repository::Repository};
+use crate::{
+    core::{cache::Cache, validator::ValidatedJson},
+    repository::Repository,
+};
 use axum::{http::StatusCode, response::IntoResponse, Extension, Json};
-use openpasswd_model::auth::{AccessToken, LoginRequest, UserRegister};
+use openpasswd_model::auth::{LoginRequest, UserRegister};
 
 pub async fn token(
     ValidatedJson(login): ValidatedJson<LoginRequest>,
     Extension(repository): Extension<Repository>,
+    Extension(cache): Extension<Cache>,
 ) -> AuthResult<impl IntoResponse> {
-    let auth_service = AuthService::new(repository);
-    let access_token = auth_service.login(&login)?;
+    let auth_service = AuthService::new(repository, cache);
+    let access_token = auth_service.login(&login).await?;
+    Ok((StatusCode::OK, Json(access_token)))
+}
 
-    let token = AccessToken {
-        access_token,
-        token_type: String::from("Bearer"),
-    };
-
-    Ok((StatusCode::OK, Json(token)))
+pub async fn logout(
+    claims: Claims,
+    Extension(repository): Extension<Repository>,
+    Extension(cache): Extension<Cache>,
+) -> AuthResult<impl IntoResponse> {
+    let auth_service = AuthService::new(repository, cache);
+    auth_service.logout(claims).await?;
+    Ok(StatusCode::OK)
 }
 
 pub async fn register(
     ValidatedJson(user): ValidatedJson<UserRegister>,
     Extension(repository): Extension<Repository>,
+    Extension(cache): Extension<Cache>,
 ) -> AuthResult<impl IntoResponse> {
-    let auth_service = AuthService::new(repository);
+    let auth_service = AuthService::new(repository, cache);
     auth_service.register(&user)?;
     Ok(StatusCode::CREATED.into_response())
 }
@@ -33,8 +42,9 @@ pub async fn register(
 pub async fn get_me(
     claims: Claims,
     Extension(repository): Extension<Repository>,
+    Extension(cache): Extension<Cache>,
 ) -> AuthResult<impl IntoResponse> {
-    let auth_service = AuthService::new(repository);
+    let auth_service = AuthService::new(repository, cache);
     let user = auth_service.get_me(claims.sub)?;
 
     Ok((StatusCode::OK, Json(user)))

@@ -17,6 +17,7 @@ pub enum AuthError {
     MissingCredentials,
     TokenCreation,
     InvalidToken,
+    MissingStorage,
     // Authentication
     InvalidCredentials,
     JwtEncode(String),
@@ -39,6 +40,10 @@ impl IntoResponse for AuthError {
                 String::from("Token creation error"),
             ),
             AuthError::InvalidToken => (StatusCode::BAD_REQUEST, String::from("Invalid token")),
+            AuthError::MissingStorage => (
+                StatusCode::BAD_REQUEST,
+                String::from("Missing storage configuration"),
+            ),
             // Authentication
             AuthError::InvalidCredentials => (
                 StatusCode::BAD_REQUEST,

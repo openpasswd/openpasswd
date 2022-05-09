@@ -1,9 +1,10 @@
 use super::dto::auth_error::{AuthError, AuthResult};
 use super::dto::claims::Claims;
+use crate::core::cache::Cache;
 use crate::repository::models::user::{NewUser, User};
 use crate::repository::repositories::devices_repository::DevicesRepository;
 use crate::repository::repositories::users_repository::UsersRepository;
-use openpasswd_model::auth::{LoginRequest, UserRegister, UserView};
+use openpasswd_model::auth::{AccessToken, LoginRequest, UserRegister, UserView};
 use rand::distributions::Alphanumeric;
 use rand::Rng;
 
@@ -12,14 +13,15 @@ where
     T: UsersRepository + DevicesRepository,
 {
     repository: T,
+    cache: Cache,
 }
 
 impl<T> AuthService<T>
 where
     T: UsersRepository + DevicesRepository,
 {
-    pub fn new(repository: T) -> AuthService<T> {
-        AuthService { repository }
+    pub fn new(repository: T, cache: Cache) -> AuthService<T> {
+        AuthService { repository, cache }
     }
 
     fn verify(&self, login_password: &str, user: &User) -> AuthResult {
@@ -41,16 +43,17 @@ where
         }
     }
 
-    fn sign_token(&self, user: &User, device_name: Option<String>) -> AuthResult<String> {
-        let expiration = chrono::Utc::now()
-            .checked_add_signed(chrono::Duration::minutes(60))
-            .expect("valid timestamp")
-            .timestamp();
-
+    fn sign_token(
+        &self,
+        user: &User,
+        device_name: Option<String>,
+        exp: i64,
+    ) -> AuthResult<(String, String)> {
         let claims = Claims {
+            jti: uuid::Uuid::new_v4().to_string(),
             sub: user.id,
             device: device_name,
-            exp: expiration as usize,
+            exp,
         };
 
         let header = jsonwebtoken::Header::new(jsonwebtoken::Algorithm::HS512);
@@ -62,18 +65,16 @@ where
         )
         .map_err(|e| AuthError::JwtEncode(e.to_string()))?;
 
-        Ok(token)
+        Ok((token, claims.jti))
     }
 
-    pub fn login(self, login: &LoginRequest) -> AuthResult<String> {
+    pub async fn login(self, login: &LoginRequest) -> AuthResult<AccessToken> {
         let user = match self.repository.users_find_by_email(&login.email) {
             Some(user) => user,
             None => return Err(AuthError::InvalidCredentials),
         };
 
-        if false {
-            return Err(AuthError::InvalidCredentials);
-        }
+        // TODO: count wrong passwords
 
         self.verify(&login.password, &user)?;
 
@@ -81,8 +82,37 @@ where
 
         self.repository.users_update_last_login(user.id);
 
-        let token = self.sign_token(&user, device_name)?;
+        let expire_at = chrono::Duration::minutes(60);
+        let expire = chrono::Utc::now()
+            .checked_add_signed(expire_at)
+            .expect("valid timestamp")
+            .timestamp();
+
+        let (signed_token, jti) = self.sign_token(&user, device_name, expire)?;
+
+        let key = format!("signed_token:{}:{}", user.id, jti);
+        self.cache
+            .set_and_expire(&key, 1, expire_at.num_seconds() as usize)
+            .await;
+
+        let token = AccessToken {
+            access_token: signed_token,
+            token_type: String::from("Bearer"),
+        };
+
         Ok(token)
+    }
+
+    pub async fn logout(self, claims: Claims) -> AuthResult {
+        let key = format!("signed_token:{}:{}", claims.sub, claims.jti);
+        // let expire = DateTime::<Utc>::from_utc(NaiveDateTime::from_timestamp(claims.exp, 0), Utc);
+        // let expiretime = self.cache.get_expiretime(&key).await;
+        // println!("Token expire: {}", expire.timestamp());
+        // println!("Redis key expire: {expiretime}");
+
+        self.cache.set_keepttl(&key, 0).await;
+
+        Ok(())
     }
 
     pub fn register(self, user: &UserRegister) -> Result<(), AuthError> {
