@@ -5,7 +5,7 @@ use crate::{auth::dto::claims::Claims, core::validator::ValidatedJson, repositor
 use axum::{
     extract::{Path, Query},
     http::StatusCode,
-    response::{IntoResponse, Response},
+    response::IntoResponse,
     Extension, Json,
 };
 use openpasswd_model::accounts::{AccountGroupRegister, AccountRegister};

@@ -1,5 +1,4 @@
 use deadpool_redis::{Config, Pool, Runtime};
-use diesel::query_builder;
 use redis::{AsyncCommands, FromRedisValue, ToRedisArgs};
 use std::future::Future;
 
@@ -15,6 +14,7 @@ impl Clone for Cache {
     }
 }
 
+#[allow(dead_code)]
 impl Cache {
     pub fn new() -> Result<Cache, String> {
         let redis_url = std::env::var("REDIS_URL").expect("REDIS_URL must be set");
@@ -70,8 +70,7 @@ impl Cache {
         T: ToRedisArgs + Send + Sync,
     {
         let mut conn = self.pool.get().await.unwrap();
-        let _: () = conn.set(key, value).await.unwrap();
-        conn.expire(key, seconds).await.unwrap()
+        let _: () = conn.set_ex(key, value, seconds).await.unwrap();
     }
 
     pub async fn get_or_set<T, F, Fut>(&self, key: &str, f: F) -> T

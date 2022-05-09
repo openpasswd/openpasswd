@@ -9,6 +9,7 @@ pub struct LoginRequest {
     #[validate(length(min = 1, message = "Password is invalid"))]
     pub password: String,
     pub device_name: Option<String>,
+    pub refresh_token: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Validate)]

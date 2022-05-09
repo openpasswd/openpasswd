@@ -1,7 +1,5 @@
 use crate::core::cryptography::{AesGcmCipher, Cipher};
-use crate::repository::models::account::{
-    Account, NewAccount, NewAccountGroup, NewAccountPassword,
-};
+use crate::repository::models::account::{NewAccount, NewAccountGroup, NewAccountPassword};
 use crate::repository::repositories::accounts_repository::AccountsRepository;
 use crate::repository::repositories::users_repository::UsersRepository;
 // use crate::orm::schema::accounts::dsl as accounts_dsl;
