@@ -17,7 +17,7 @@ pub struct AccountGroupView {
 pub struct AccountRegister {
     #[validate(length(min = 1))]
     pub name: String,
-    #[validate(range(min = 0, max = 100))]
+    #[validate(range(min = 1))]
     pub group_id: i32,
     pub level: Option<i16>,
     #[validate(length(min = 1))]
