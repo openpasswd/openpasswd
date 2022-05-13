@@ -1,13 +1,15 @@
 services:
-  # mysql:
-  #   image: mysql:8
-  #   ports:
-  #     - 3306:3306
-  #   environment:
-  #     - MYSQL_ROOT_PASSWORD=root
-  #     - MYSQL_DATABASE=openpasswd
-  #     - MYSQL_USER=open
-  #     - MYSQL_PASSWORD=passwd
+  openpasswd:
+    build: .
+    ports:
+      - 7777:7777
+    environment:
+      - DATABASE_URL=postgres://open:passwd@postgres:5432/openpasswd
+      - RUST_LOG=info
+      - JWT_SECRET=openpasswd
+      - DATABASE_POOL_SIZE=15
+      - CORS_ALLOW_ORIGIN=*
+      - REDIS_URL=redis://redis:6379/
   redis:
     image: redis:7-alpine
     ports:
