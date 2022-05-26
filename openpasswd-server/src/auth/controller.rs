@@ -7,7 +7,7 @@ use crate::{
     repository::Repository,
 };
 use axum::{http::StatusCode, response::IntoResponse, Extension, Json};
-use openpasswd_model::auth::{LoginRequest, UserRegister};
+use openpasswd_model::auth::{LoginRequest, PasswordRecovery, UserRegister};
 
 pub async fn token(
     ValidatedJson(login): ValidatedJson<LoginRequest>,
@@ -48,4 +48,24 @@ pub async fn get_me(
     let user = auth_service.get_me(claims.sub)?;
 
     Ok((StatusCode::OK, Json(user)))
+}
+
+pub async fn password_recovery_start(
+    ValidatedJson(pass_recovery): ValidatedJson<PasswordRecovery>,
+    Extension(repository): Extension<Repository>,
+    Extension(cache): Extension<Cache>,
+) -> AuthResult<impl IntoResponse> {
+    let auth_service = AuthService::new(repository, cache);
+    auth_service.password_recovery_start(&pass_recovery).await?;
+    Ok(StatusCode::CREATED.into_response())
+}
+
+pub async fn password_recovery_finish(
+    ValidatedJson(pass_recovery): ValidatedJson<PasswordRecovery>,
+    Extension(repository): Extension<Repository>,
+    Extension(cache): Extension<Cache>,
+) -> AuthResult<impl IntoResponse> {
+    let auth_service = AuthService::new(repository, cache);
+    auth_service.password_recovery_finish(&pass_recovery)?;
+    Ok(StatusCode::CREATED.into_response())
 }

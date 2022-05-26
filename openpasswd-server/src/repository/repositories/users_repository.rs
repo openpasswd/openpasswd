@@ -1,4 +1,6 @@
 use crate::repository::models::user::{NewUser, User};
+use crate::repository::schema::user_password_recovery;
+use crate::repository::schema::user_password_recovery::dsl as user_password_recovery_dsl;
 use crate::repository::schema::users;
 use crate::repository::schema::users::dsl as users_dsl;
 use crate::repository::Repository;
@@ -10,6 +12,7 @@ pub trait UsersRepository {
     fn users_update_last_login(&self, user_id: i32);
     fn users_update_fail_attempts(&self, user_id: i32, fail_attempts: i16);
     fn users_insert(&self, user: NewUser);
+    fn user_password_recovery_list(&self, user_id: i32);
 }
 
 impl UsersRepository for Repository {
@@ -78,5 +81,17 @@ impl UsersRepository for Repository {
         {
             panic!("{e}");
         }
+    }
+
+    fn user_password_recovery_list(&self, user_id: i32) {
+        let connection = &self.pool.get().unwrap();
+
+        // match user_password_recovery_dsl::user_password_recovery
+        //     .filter(user_password_recovery_dsl::user_id.eq(user_id))
+        //     .load::<AccountGroup>(connection)
+        // {
+        //     Ok(result) => result,
+        //     Err(e) => panic!("{e}"),
+        // }
     }
 }

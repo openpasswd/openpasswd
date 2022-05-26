@@ -3,7 +3,10 @@ extern crate diesel;
 #[macro_use]
 extern crate diesel_migrations;
 
-use crate::{core::cache::Cache, repository::Repository};
+use crate::{
+    core::cache::Cache, core::mail_service::EmailAddress, core::mail_service::MailService,
+    repository::Repository,
+};
 use axum::{
     handler::Handler,
     http::{HeaderValue, Method, StatusCode},
@@ -70,6 +73,7 @@ fn root() -> Router {
     Router::new()
         .route("/", get(health_check))
         .route("/cache", get(cache_check))
+        .route("/mail", get(mail_check))
 }
 
 async fn health_check() -> impl IntoResponse {
@@ -85,6 +89,23 @@ async fn cache_check(Extension(cache): Extension<Cache>) -> impl IntoResponse {
     let result: String = cache.get(&key).await.unwrap();
 
     (StatusCode::OK, result)
+}
+
+async fn mail_check() -> impl IntoResponse {
+    match MailService::send_email(
+        EmailAddress::new(Some("nobody"), "nobody@domain.tld"),
+        EmailAddress::new(Some("nobody"), "nobody@domain.tld"),
+        String::from("Mail Check"),
+        core::mail_service::MessageBody::Text(String::from("Hello world")),
+    )
+    .await
+    {
+        Ok(()) => StatusCode::OK,
+        Err(e) => {
+            log::error!("{:?}", e);
+            StatusCode::INTERNAL_SERVER_ERROR
+        }
+    }
 }
 
 async fn handler_404() -> impl IntoResponse {

@@ -1,10 +1,11 @@
 use super::dto::auth_error::{AuthError, AuthResult};
 use super::dto::claims::Claims;
 use crate::core::cache::Cache;
+use crate::core::mail_service::{EmailAddress, MailService, MessageBody};
 use crate::repository::models::user::{NewUser, User};
 use crate::repository::repositories::devices_repository::DevicesRepository;
 use crate::repository::repositories::users_repository::UsersRepository;
-use openpasswd_model::auth::{AccessToken, LoginRequest, UserRegister, UserView};
+use openpasswd_model::auth::{AccessToken, LoginRequest, PasswordRecovery, UserRegister, UserView};
 use rand::distributions::Alphanumeric;
 use rand::Rng;
 
@@ -158,5 +159,38 @@ where
             name: user.name.to_owned(),
             last_login: last_login_time,
         })
+    }
+
+    pub async fn password_recovery_start(
+        self,
+        pass_recovery: &PasswordRecovery,
+    ) -> Result<(), AuthError> {
+        let user = match self.repository.users_find_by_email(&pass_recovery.email) {
+            Some(user) => user,
+            None => return Err(AuthError::UserNotFound),
+        };
+
+        MailService::send_email(
+            EmailAddress::new(Some("OpenPasswd"), "openpasswd@gmail.com"),
+            EmailAddress::new(Some(&user.name), &user.email),
+            String::from("Password recovery"),
+            MessageBody::Text(String::from("Hello world")),
+        )
+        .await
+        .unwrap();
+
+        Ok(())
+    }
+
+    pub fn password_recovery_finish(
+        self,
+        pass_recovery: &PasswordRecovery,
+    ) -> Result<(), AuthError> {
+        let user = match self.repository.users_find_by_email(&pass_recovery.email) {
+            Some(user) => user,
+            None => return Err(AuthError::UserNotFound),
+        };
+
+        Ok(())
     }
 }

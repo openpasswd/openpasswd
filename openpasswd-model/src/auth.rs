@@ -36,3 +36,10 @@ pub struct UserView {
     pub email: String,
     pub last_login: Option<String>,
 }
+
+#[derive(Serialize, Deserialize, Validate)]
+pub struct PasswordRecovery {
+    #[validate(length(min = 1, message = "Email is invalid"))]
+    #[validate(email(message = "Email is invalid"))]
+    pub email: String,
+}

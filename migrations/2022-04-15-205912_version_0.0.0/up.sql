@@ -12,6 +12,16 @@ CREATE TABLE users (
 
 CREATE UNIQUE INDEX index_user_email on users(email);
 
+CREATE TABLE user_password_recovery (
+  id uuid PRIMARY KEY NOT NULL,
+  user_id INT NOT NULL,
+  issued_at TIMESTAMP NULL,
+  FOREIGN KEY (user_id) 
+      REFERENCES users (id) 
+         ON DELETE NO ACTION 
+         ON UPDATE NO ACTION
+);
+
 CREATE TABLE account_groups (
   id SERIAL PRIMARY KEY,
   user_id INT NOT NULL,

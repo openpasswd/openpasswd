@@ -38,6 +38,14 @@ table! {
 }
 
 table! {
+    user_password_recovery (id) {
+        id -> Uuid,
+        user_id -> Int4,
+        issued_at -> Nullable<Timestamp>,
+    }
+}
+
+table! {
     users (id) {
         id -> Int4,
         name -> Varchar,
@@ -55,11 +63,13 @@ joinable!(account_passwords -> accounts (account_id));
 joinable!(accounts -> account_groups (account_groups_id));
 joinable!(accounts -> users (user_id));
 joinable!(devices -> users (user_id));
+joinable!(user_password_recovery -> users (user_id));
 
 allow_tables_to_appear_in_same_query!(
     account_groups,
     account_passwords,
     accounts,
     devices,
+    user_password_recovery,
     users,
 );
