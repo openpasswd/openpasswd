@@ -2,9 +2,10 @@ use super::dto::auth_error::{AuthError, AuthResult};
 use super::dto::claims::Claims;
 use crate::core::cache::Cache;
 use crate::core::mail_service::{EmailAddress, MailService, MessageBody};
-use crate::repository::models::user::{NewUser, User};
+use crate::repository::models::user::NewUser;
 use crate::repository::repositories::devices_repository::DevicesRepository;
 use crate::repository::repositories::users_repository::UsersRepository;
+use entity::users::Model as User;
 use openpasswd_model::auth::{AccessToken, LoginRequest, PasswordRecovery, UserRegister, UserView};
 use rand::distributions::Alphanumeric;
 use rand::Rng;
@@ -25,20 +26,22 @@ where
         AuthService { repository, cache }
     }
 
-    fn verify(&self, login_password: &str, user: &User) -> AuthResult {
+    async fn verify(&self, login_password: &str, user: &User) -> AuthResult {
         if argon2::verify_encoded(&user.password, login_password.as_bytes()).unwrap() {
             Ok(())
         } else {
             self.repository
-                .users_update_fail_attempts(user.id, user.fail_attempts + 1);
+                .users_update_fail_attempts(user.id, user.fail_attempts + 1)
+                .await;
             Err(AuthError::InvalidCredentials)
         }
     }
 
-    fn find_device_name(&self, login: &LoginRequest, user: &User) -> Option<String> {
+    async fn find_device_name(&self, login: &LoginRequest, user: &User) -> Option<String> {
         if let Some(device_name) = login.device_name.as_ref() {
             self.repository
                 .devices_find_device_name(user.id, device_name)
+                .await
         } else {
             None
         }
@@ -70,18 +73,18 @@ where
     }
 
     pub async fn login(self, login: &LoginRequest) -> AuthResult<AccessToken> {
-        let user = match self.repository.users_find_by_email(&login.email) {
+        let user = match self.repository.users_find_by_email(&login.email).await {
             Some(user) => user,
             None => return Err(AuthError::InvalidCredentials),
         };
 
         // TODO: count wrong passwords
 
-        self.verify(&login.password, &user)?;
+        self.verify(&login.password, &user).await?;
 
-        let device_name = self.find_device_name(&login, &user);
+        let device_name = self.find_device_name(&login, &user).await;
 
-        self.repository.users_update_last_login(user.id);
+        self.repository.users_update_last_login(user.id).await;
 
         let expire_at = chrono::Duration::minutes(60);
         let expire = chrono::Utc::now()
@@ -116,39 +119,52 @@ where
         Ok(())
     }
 
-    pub fn register(self, user: &UserRegister) -> Result<(), AuthError> {
-        if self.repository.users_find_by_email(&user.email).is_some() {
+    pub async fn register(self, user: UserRegister) -> Result<(), AuthError> {
+        if self
+            .repository
+            .users_find_by_email(&user.email)
+            .await
+            .is_some()
+        {
             return Err(AuthError::EmailAlreadyTaken);
         }
 
-        let mut rng = rand::thread_rng();
-        let salt: Vec<u8> = (&mut rng).sample_iter(Alphanumeric).take(12).collect();
+        let UserRegister {
+            name,
+            email,
+            password,
+        } = user;
+
+        let salt: Vec<u8> = {
+            let mut rng = rand::thread_rng();
+            (&mut rng).sample_iter(Alphanumeric).take(12).collect()
+        };
         let config = argon2::Config::default();
 
-        let password = argon2::hash_encoded(user.password.as_bytes(), &salt, &config).unwrap();
+        let password = argon2::hash_encoded(password.as_bytes(), &salt, &config).unwrap();
 
         let id = uuid::Uuid::new_v4();
         let master_key = id.simple().to_string();
 
         let new_user = NewUser {
-            name: &user.name,
-            email: &user.email,
-            password: &password,
-            master_key: Some(&master_key),
+            name,
+            email,
+            password,
+            master_key: Some(master_key),
         };
 
-        self.repository.users_insert(new_user);
+        self.repository.users_insert(new_user).await;
         Ok(())
     }
 
-    pub fn get_me(self, id: i32) -> Result<UserView, AuthError> {
-        let user = match self.repository.users_find_by_id(id) {
+    pub async fn get_me(self, id: i32) -> Result<UserView, AuthError> {
+        let user = match self.repository.users_find_by_id(id).await {
             Some(user) => user,
             None => return Err(AuthError::WrongCredentials),
         };
 
         let last_login_time = if let Some(last_login_time) = user.last_login {
-            let datetime: chrono::DateTime<chrono::Utc> = last_login_time.into();
+            let datetime: chrono::DateTime<chrono::Utc> = last_login_time;
             Some(datetime.to_rfc3339())
         } else {
             None
@@ -165,7 +181,11 @@ where
         self,
         pass_recovery: &PasswordRecovery,
     ) -> Result<(), AuthError> {
-        let user = match self.repository.users_find_by_email(&pass_recovery.email) {
+        let user = match self
+            .repository
+            .users_find_by_email(&pass_recovery.email)
+            .await
+        {
             Some(user) => user,
             None => return Err(AuthError::UserNotFound),
         };
@@ -182,11 +202,15 @@ where
         Ok(())
     }
 
-    pub fn password_recovery_finish(
+    pub async fn password_recovery_finish(
         self,
         pass_recovery: &PasswordRecovery,
     ) -> Result<(), AuthError> {
-        let user = match self.repository.users_find_by_email(&pass_recovery.email) {
+        let user = match self
+            .repository
+            .users_find_by_email(&pass_recovery.email)
+            .await
+        {
             Some(user) => user,
             None => return Err(AuthError::UserNotFound),
         };

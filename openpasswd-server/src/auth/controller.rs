@@ -35,8 +35,8 @@ pub async fn register(
     Extension(cache): Extension<Cache>,
 ) -> AuthResult<impl IntoResponse> {
     let auth_service = AuthService::new(repository, cache);
-    auth_service.register(&user)?;
-    Ok(StatusCode::CREATED.into_response())
+    auth_service.register(user).await?;
+    Ok(StatusCode::CREATED)
 }
 
 pub async fn get_me(
@@ -45,7 +45,7 @@ pub async fn get_me(
     Extension(cache): Extension<Cache>,
 ) -> AuthResult<impl IntoResponse> {
     let auth_service = AuthService::new(repository, cache);
-    let user = auth_service.get_me(claims.sub)?;
+    let user = auth_service.get_me(claims.sub).await?;
 
     Ok((StatusCode::OK, Json(user)))
 }
@@ -66,6 +66,8 @@ pub async fn password_recovery_finish(
     Extension(cache): Extension<Cache>,
 ) -> AuthResult<impl IntoResponse> {
     let auth_service = AuthService::new(repository, cache);
-    auth_service.password_recovery_finish(&pass_recovery)?;
+    auth_service
+        .password_recovery_finish(&pass_recovery)
+        .await?;
     Ok(StatusCode::CREATED.into_response())
 }

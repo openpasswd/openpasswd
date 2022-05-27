@@ -20,7 +20,9 @@ pub async fn register_group(
     Extension(repository): Extension<Repository>,
 ) -> AccountResult<impl IntoResponse> {
     let account_service = AccountService::new(repository);
-    let account_group = account_service.register_group(&account_groups, claims.sub)?;
+    let account_group = account_service
+        .register_group(account_groups, claims.sub)
+        .await?;
     Ok((StatusCode::CREATED, Json(account_group)))
 }
 
@@ -29,7 +31,7 @@ pub async fn list_groups(
     Extension(repository): Extension<Repository>,
 ) -> AccountResult<impl IntoResponse> {
     let account_service = AccountService::new(repository);
-    let result = account_service.list_groups(claims.sub)?;
+    let result = account_service.list_groups(claims.sub).await?;
     Ok((StatusCode::OK, Json(result)))
 }
 
@@ -39,7 +41,9 @@ pub async fn register_account(
     Extension(repository): Extension<Repository>,
 ) -> AccountResult<impl IntoResponse> {
     let account_service = AccountService::new(repository);
-    let account = account_service.register_account(&account, claims.sub)?;
+    let account = account_service
+        .register_account(account, claims.sub)
+        .await?;
     Ok((StatusCode::CREATED, Json(account)))
 }
 
@@ -58,7 +62,7 @@ pub async fn list_accounts(
     } else {
         None
     };
-    let result = account_service.list_accounts(claims.sub, group_id)?;
+    let result = account_service.list_accounts(claims.sub, group_id).await?;
     Ok((StatusCode::OK, Json(result)))
 }
 
@@ -68,7 +72,7 @@ pub async fn get_account(
     Extension(repository): Extension<Repository>,
 ) -> AccountResult<impl IntoResponse> {
     let account_service = AccountService::new(repository);
-    let result = account_service.get_account(claims.sub, account_id)?;
+    let result = account_service.get_account(claims.sub, account_id).await?;
     Ok((StatusCode::OK, Json(result)))
 }
 

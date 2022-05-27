@@ -1,8 +1,3 @@
-#[macro_use]
-extern crate diesel;
-#[macro_use]
-extern crate diesel_migrations;
-
 use crate::{
     core::cache::Cache, core::mail_service::EmailAddress, core::mail_service::MailService,
     repository::Repository,
@@ -30,7 +25,7 @@ async fn main() {
     dotenv().ok();
     pretty_env_logger::init();
 
-    let repository = Repository::new();
+    let repository = Repository::new().await;
     repository.migration_run();
 
     let cache = Cache::new().unwrap();

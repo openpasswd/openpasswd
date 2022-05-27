@@ -2,7 +2,6 @@ use crate::core::cryptography::{AesGcmCipher, Cipher};
 use crate::repository::models::account::{NewAccount, NewAccountGroup, NewAccountPassword};
 use crate::repository::repositories::accounts_repository::AccountsRepository;
 use crate::repository::repositories::users_repository::UsersRepository;
-// use crate::orm::schema::accounts::dsl as accounts_dsl;
 use openpasswd_model::accounts::{
     AccountGroupRegister, AccountGroupView, AccountRegister, AccountView, AccountWithPasswordView,
 };
@@ -25,19 +24,18 @@ where
         AccountService { repository }
     }
 
-    pub fn register_group(
+    pub async fn register_group(
         self,
-        account_group: &AccountGroupRegister,
+        account_group: AccountGroupRegister,
         id: i32,
     ) -> AccountResult<AccountGroupView> {
-        let account_group = NewAccountGroup {
-            name: account_group.name.as_ref(),
-            user_id: id,
-        };
+        let AccountGroupRegister { name } = account_group;
+        let account_group = NewAccountGroup { name, user_id: id };
 
         let account_group = self
             .repository
             .accounts_groups_insert(account_group)
+            .await
             .unwrap();
 
         Ok(AccountGroupView {
@@ -46,8 +44,8 @@ where
         })
     }
 
-    pub fn list_groups(self, user_id: i32) -> AccountResult<List<AccountGroupView>> {
-        let result = self.repository.accounts_groups_list(user_id);
+    pub async fn list_groups(self, user_id: i32) -> AccountResult<List<AccountGroupView>> {
+        let result = self.repository.accounts_groups_list(user_id).await;
 
         Ok(List {
             items: result
@@ -61,14 +59,15 @@ where
         })
     }
 
-    pub fn register_account(
+    pub async fn register_account(
         self,
-        account: &AccountRegister,
+        account: AccountRegister,
         user_id: i32,
     ) -> AccountResult<AccountView> {
         let groups = self
             .repository
-            .accounts_groups_find_by_id_and_user_id(account.group_id, user_id);
+            .accounts_groups_find_by_id(account.group_id, user_id)
+            .await;
 
         if groups.is_none() {
             return Err(AccountError::InvalidAccountGroup);
@@ -77,33 +76,35 @@ where
         let master_key = self
             .repository
             .users_find_by_id(user_id)
+            .await
             .unwrap()
             .master_key
             .unwrap();
         let cipher = AesGcmCipher::new(&master_key);
 
         let new_account = NewAccount {
-            name: account.name.as_ref(),
+            name: account.name,
             level: account.level,
             account_groups_id: account.group_id,
 
             user_id,
         };
 
-        let db_account = self.repository.accounts_insert(new_account).unwrap();
+        let db_account = self.repository.accounts_insert(new_account).await.unwrap();
 
         let password = cipher.encrypt(&account.password);
-        let created_date: std::time::SystemTime = chrono::Utc::now().into();
+        let created_date = chrono::Utc::now();
         let account_password = NewAccountPassword {
             account_id: db_account.id,
-            username: account.username.as_ref(),
-            password: &password,
+            username: account.username,
+            password,
             created_date,
         };
 
         let _ = self
             .repository
             .account_passwords_insert(account_password)
+            .await
             .unwrap();
 
         Ok(AccountView {
@@ -113,16 +114,17 @@ where
         })
     }
 
-    pub fn list_accounts(
+    pub async fn list_accounts(
         self,
         user_id: i32,
         group_id: Option<i32>,
     ) -> AccountResult<List<AccountView>> {
         let result = if let Some(group_id) = group_id {
             self.repository
-                .accounts_list_by_user_id_and_group_id(user_id, group_id)
+                .accounts_list_by_group_id(user_id, group_id)
+                .await
         } else {
-            self.repository.accounts_list_by_user_id(user_id)
+            self.repository.accounts_list(user_id).await
         };
 
         Ok(List {
@@ -138,38 +140,43 @@ where
         })
     }
 
-    pub fn get_account(
+    pub async fn get_account(
         self,
         user_id: i32,
         account_id: i32,
     ) -> AccountResult<AccountWithPasswordView> {
         let result = self
             .repository
-            .accounts_get_with_password_by_id_and_user_id(account_id, user_id);
+            .accounts_get_with_passwords_by_account_id(account_id, user_id)
+            .await;
 
-        let master_key = self
-            .repository
-            .users_find_by_id(user_id)
-            .unwrap()
-            .master_key
-            .unwrap();
-        let cipher = AesGcmCipher::new(&master_key);
+        if let Some((account, account_passwords)) = result {
+            let master_key = self
+                .repository
+                .users_find_by_id(user_id)
+                .await
+                .unwrap()
+                .master_key
+                .unwrap();
+            let cipher = AesGcmCipher::new(&master_key);
 
-        let account = result.ok_or(AccountError::NotFound)?;
-        if let Some(last_password) = account.passwords.last() {
+            let (username, password) = if let Some(account_password) = account_passwords.last() {
+                (
+                    Some(account_password.username.to_owned()),
+                    Some(cipher.decrypt(&account_password.password)),
+                )
+            } else {
+                (None, None)
+            };
+
             Ok(AccountWithPasswordView {
                 id: account.id,
                 name: account.name,
-                username: last_password.username.to_owned(),
-                password: cipher.decrypt(&last_password.password),
+                username,
+                password,
             })
         } else {
-            Ok(AccountWithPasswordView {
-                id: account.id,
-                name: account.name,
-                username: "".to_owned(),
-                password: "".to_owned(),
-            })
+            Err(AccountError::NotFound)
         }
     }
 }
