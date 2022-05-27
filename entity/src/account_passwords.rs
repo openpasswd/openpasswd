@@ -10,7 +10,7 @@ pub struct Model {
     pub account_id: i32,
     pub username: String,
     pub password: Vec<u8>,
-    pub created_date: DateTimeUtc,
+    pub created_date: DateTime,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

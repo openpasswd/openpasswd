@@ -93,7 +93,7 @@ where
         let db_account = self.repository.accounts_insert(new_account).await.unwrap();
 
         let password = cipher.encrypt(&account.password);
-        let created_date = chrono::Utc::now();
+        let created_date = chrono::Utc::now().naive_utc();
         let account_password = NewAccountPassword {
             account_id: db_account.id,
             username: account.username,

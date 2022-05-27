@@ -5,6 +5,7 @@ use crate::core::mail_service::{EmailAddress, MailService, MessageBody};
 use crate::repository::models::user::NewUser;
 use crate::repository::repositories::devices_repository::DevicesRepository;
 use crate::repository::repositories::users_repository::UsersRepository;
+use chrono::{TimeZone, Utc};
 use entity::users::Model as User;
 use openpasswd_model::auth::{AccessToken, LoginRequest, PasswordRecovery, UserRegister, UserView};
 use rand::distributions::Alphanumeric;
@@ -164,7 +165,7 @@ where
         };
 
         let last_login_time = if let Some(last_login_time) = user.last_login {
-            let datetime: chrono::DateTime<chrono::Utc> = last_login_time;
+            let datetime = Utc.from_utc_datetime(&last_login_time);
             Some(datetime.to_rfc3339())
         } else {
             None
@@ -206,7 +207,7 @@ where
         self,
         pass_recovery: &PasswordRecovery,
     ) -> Result<(), AuthError> {
-        let user = match self
+        let _user = match self
             .repository
             .users_find_by_email(&pass_recovery.email)
             .await

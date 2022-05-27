@@ -11,7 +11,7 @@ pub trait UsersRepository {
     async fn users_update_last_login(&self, user_id: i32);
     async fn users_update_fail_attempts(&self, user_id: i32, fail_attempts: i16);
     async fn users_insert(&self, user: NewUser);
-    async fn user_password_recovery_list(&self, user_id: i32);
+    // async fn users_password_recovery_list(&self, user_id: i32);
 }
 
 #[async_trait]
@@ -34,7 +34,7 @@ impl UsersRepository for Repository {
     async fn users_update_last_login(&self, user_id: i32) {
         let user = entity::users::ActiveModel {
             id: Set(user_id),
-            last_login: Set(Some(chrono::Utc::now())),
+            last_login: Set(Some(chrono::Utc::now().naive_utc())),
             ..Default::default()
         };
 
@@ -49,7 +49,7 @@ impl UsersRepository for Repository {
         let user = entity::users::ActiveModel {
             id: Set(user_id),
             fail_attempts: Set(fail_attempts),
-            last_login: Set(Some(chrono::Utc::now())),
+            last_login: Set(Some(chrono::Utc::now().naive_utc())),
             ..Default::default()
         };
 
@@ -72,16 +72,5 @@ impl UsersRepository for Repository {
             .exec(&self.db)
             .await
             .unwrap();
-    }
-
-    async fn user_password_recovery_list(&self, user_id: i32) {
-        todo!();
-        // match user_password_recovery_dsl::user_password_recovery
-        //     .filter(user_password_recovery_dsl::user_id.eq(user_id))
-        //     .load::<AccountGroup>(connection)
-        // {
-        //     Ok(result) => result,
-        //     Err(e) => panic!("{e}"),
-        // }
     }
 }

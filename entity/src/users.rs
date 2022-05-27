@@ -8,30 +8,30 @@ pub struct Model {
     #[sea_orm(primary_key)]
     pub id: i32,
     pub name: String,
+    #[sea_orm(unique)]
     pub email: String,
-    #[sea_orm(column_type = "Text")]
     pub password: String,
     pub master_key: Option<String>,
-    pub last_login: Option<DateTimeUtc>,
+    pub last_login: Option<DateTime>,
     pub fail_attempts: i16,
-    pub last_attempt: Option<DateTimeUtc>,
+    pub last_attempt: Option<DateTime>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
 pub enum Relation {
-    #[sea_orm(has_many = "super::user_password_recovery::Entity")]
-    UserPasswordRecovery,
-    #[sea_orm(has_many = "super::account_groups::Entity")]
-    AccountGroups,
-    #[sea_orm(has_many = "super::accounts::Entity")]
-    Accounts,
     #[sea_orm(has_many = "super::devices::Entity")]
     Devices,
+    #[sea_orm(has_many = "super::account_groups::Entity")]
+    AccountGroups,
+    #[sea_orm(has_many = "super::user_password_recovery::Entity")]
+    UserPasswordRecovery,
+    #[sea_orm(has_many = "super::accounts::Entity")]
+    Accounts,
 }
 
-impl Related<super::user_password_recovery::Entity> for Entity {
+impl Related<super::devices::Entity> for Entity {
     fn to() -> RelationDef {
-        Relation::UserPasswordRecovery.def()
+        Relation::Devices.def()
     }
 }
 
@@ -41,15 +41,15 @@ impl Related<super::account_groups::Entity> for Entity {
     }
 }
 
-impl Related<super::accounts::Entity> for Entity {
+impl Related<super::user_password_recovery::Entity> for Entity {
     fn to() -> RelationDef {
-        Relation::Accounts.def()
+        Relation::UserPasswordRecovery.def()
     }
 }
 
-impl Related<super::devices::Entity> for Entity {
+impl Related<super::accounts::Entity> for Entity {
     fn to() -> RelationDef {
-        Relation::Devices.def()
+        Relation::Accounts.def()
     }
 }
 

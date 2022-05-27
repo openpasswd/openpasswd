@@ -36,14 +36,14 @@ fn stmt_users() -> TableCreateStatement {
                 .not_null(),
         )
         .col(ColumnDef::new(entity::users::Column::MasterKey).string_len(32))
-        .col(ColumnDef::new(entity::users::Column::LastLogin).timestamp_with_time_zone())
+        .col(ColumnDef::new(entity::users::Column::LastLogin).timestamp())
         .col(
             ColumnDef::new(entity::users::Column::FailAttempts)
                 .small_integer()
                 .default(0)
                 .not_null(),
         )
-        .col(ColumnDef::new(entity::users::Column::LastAttempt).timestamp_with_time_zone())
+        .col(ColumnDef::new(entity::users::Column::LastAttempt).timestamp())
         .to_owned()
 }
 
@@ -74,8 +74,8 @@ fn stmt_user_password_recovery() -> TableCreateStatement {
                     entity::user_password_recovery::Column::UserId,
                 )
                 .to(entity::users::Entity, entity::users::Column::Id)
-                .on_delete(ForeignKeyAction::Cascade)
-                .on_update(ForeignKeyAction::Cascade),
+                .on_delete(ForeignKeyAction::NoAction)
+                .on_update(ForeignKeyAction::NoAction),
         )
         .to_owned()
 }
@@ -108,8 +108,8 @@ fn stmt_account_groups() -> TableCreateStatement {
                     entity::account_groups::Column::UserId,
                 )
                 .to(entity::users::Entity, entity::users::Column::Id)
-                .on_delete(ForeignKeyAction::Cascade)
-                .on_update(ForeignKeyAction::Cascade),
+                .on_delete(ForeignKeyAction::NoAction)
+                .on_update(ForeignKeyAction::NoAction),
         )
         .to_owned()
 }
@@ -145,8 +145,8 @@ fn stmt_accounts() -> TableCreateStatement {
             ForeignKey::create()
                 .from(entity::accounts::Entity, entity::accounts::Column::UserId)
                 .to(entity::users::Entity, entity::users::Column::Id)
-                .on_delete(ForeignKeyAction::Cascade)
-                .on_update(ForeignKeyAction::Cascade),
+                .on_delete(ForeignKeyAction::NoAction)
+                .on_update(ForeignKeyAction::NoAction),
         )
         .foreign_key(
             ForeignKey::create()
@@ -158,8 +158,8 @@ fn stmt_accounts() -> TableCreateStatement {
                     entity::account_groups::Entity,
                     entity::account_groups::Column::Id,
                 )
-                .on_delete(ForeignKeyAction::Cascade)
-                .on_update(ForeignKeyAction::Cascade),
+                .on_delete(ForeignKeyAction::NoAction)
+                .on_update(ForeignKeyAction::NoAction),
         )
         .to_owned()
 }
@@ -202,8 +202,8 @@ fn stmt_account_passwords() -> TableCreateStatement {
                     entity::account_passwords::Column::AccountId,
                 )
                 .to(entity::accounts::Entity, entity::accounts::Column::Id)
-                .on_delete(ForeignKeyAction::Cascade)
-                .on_update(ForeignKeyAction::Cascade),
+                .on_delete(ForeignKeyAction::NoAction)
+                .on_update(ForeignKeyAction::NoAction),
         )
         .to_owned()
 }
@@ -247,8 +247,8 @@ fn stmt_devices() -> TableCreateStatement {
             ForeignKey::create()
                 .from(entity::devices::Entity, entity::devices::Column::UserId)
                 .to(entity::users::Entity, entity::users::Column::Id)
-                .on_delete(ForeignKeyAction::Cascade)
-                .on_update(ForeignKeyAction::Cascade),
+                .on_delete(ForeignKeyAction::NoAction)
+                .on_update(ForeignKeyAction::NoAction),
         )
         .index(
             Index::create()

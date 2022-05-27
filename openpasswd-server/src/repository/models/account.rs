@@ -1,4 +1,4 @@
-use chrono::{DateTime, Utc};
+use chrono::NaiveDateTime;
 
 pub struct NewAccountGroup {
     pub user_id: i32,
@@ -16,5 +16,5 @@ pub struct NewAccountPassword {
     pub account_id: i32,
     pub username: String,
     pub password: Vec<u8>,
-    pub created_date: DateTime<Utc>,
+    pub created_date: NaiveDateTime,
 }

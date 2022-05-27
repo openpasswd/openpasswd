@@ -37,6 +37,7 @@ impl From<EmailAddress> for Mailbox {
     }
 }
 
+#[allow(dead_code)]
 pub enum MessageBody {
     Text(String),
     Html(String),

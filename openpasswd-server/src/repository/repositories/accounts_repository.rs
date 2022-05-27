@@ -1,7 +1,7 @@
 use crate::repository::models::account::{NewAccount, NewAccountGroup, NewAccountPassword};
 use crate::repository::Repository;
 use async_trait::async_trait;
-use sea_orm::ActiveValue::{NotSet, Set};
+use sea_orm::ActiveValue::Set;
 use sea_orm::{ActiveModelTrait, ColumnTrait, EntityTrait, QueryFilter};
 
 #[async_trait]
@@ -91,11 +91,7 @@ impl AccountsRepository for Repository {
         let account = entity::accounts::ActiveModel {
             name: Set(account.name),
             user_id: Set(account.user_id),
-            level: if let Some(level) = account.level {
-                Set(level)
-            } else {
-                NotSet
-            },
+            level: Set(account.level),
             account_groups_id: Set(account.account_groups_id),
             ..Default::default()
         };
