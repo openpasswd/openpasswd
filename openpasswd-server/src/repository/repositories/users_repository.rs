@@ -10,6 +10,7 @@ pub trait UsersRepository {
     async fn users_find_by_id(&self, id: i32) -> Option<entity::users::Model>;
     async fn users_update_last_login(&self, user_id: i32);
     async fn users_update_fail_attempts(&self, user_id: i32, fail_attempts: i16);
+    async fn users_update_password(&self, user_id: i32, password: String);
     async fn users_insert(&self, user: NewUser);
     // async fn users_password_recovery_list(&self, user_id: i32);
 }
@@ -39,7 +40,6 @@ impl UsersRepository for Repository {
         };
 
         entity::users::Entity::update(user)
-            // .filter(entity::users::Column::Id.eq(user_id))
             .exec(&self.db)
             .await
             .unwrap();
@@ -54,7 +54,19 @@ impl UsersRepository for Repository {
         };
 
         entity::users::Entity::update(user)
-            // .filter(entity::users::Column::Id.eq(user_id))
+            .exec(&self.db)
+            .await
+            .unwrap();
+    }
+
+    async fn users_update_password(&self, user_id: i32, password: String) {
+        let user = entity::users::ActiveModel {
+            id: Set(user_id),
+            password: Set(password),
+            ..Default::default()
+        };
+
+        entity::users::Entity::update(user)
             .exec(&self.db)
             .await
             .unwrap();

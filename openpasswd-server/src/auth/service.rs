@@ -7,7 +7,10 @@ use crate::repository::repositories::devices_repository::DevicesRepository;
 use crate::repository::repositories::users_repository::UsersRepository;
 use chrono::{TimeZone, Utc};
 use entity::users::Model as User;
-use openpasswd_model::auth::{AccessToken, LoginRequest, PasswordRecovery, UserRegister, UserView};
+use openpasswd_model::auth::{
+    AccessToken, LoginRequest, PasswordRecoveryFinish, PasswordRecoveryStart, UserRegister,
+    UserView,
+};
 use rand::distributions::Alphanumeric;
 use rand::Rng;
 
@@ -108,6 +111,16 @@ where
         Ok(token)
     }
 
+    pub fn hash_password(password: String) -> String {
+        let salt: Vec<u8> = {
+            let mut rng = rand::thread_rng();
+            (&mut rng).sample_iter(Alphanumeric).take(12).collect()
+        };
+        let config = argon2::Config::default();
+
+        argon2::hash_encoded(password.as_bytes(), &salt, &config).unwrap()
+    }
+
     pub async fn logout(self, claims: Claims) -> AuthResult {
         let key = format!("signed_token:{}:{}", claims.sub, claims.jti);
         // let expire = DateTime::<Utc>::from_utc(NaiveDateTime::from_timestamp(claims.exp, 0), Utc);
@@ -136,13 +149,7 @@ where
             password,
         } = user;
 
-        let salt: Vec<u8> = {
-            let mut rng = rand::thread_rng();
-            (&mut rng).sample_iter(Alphanumeric).take(12).collect()
-        };
-        let config = argon2::Config::default();
-
-        let password = argon2::hash_encoded(password.as_bytes(), &salt, &config).unwrap();
+        let password = Self::hash_password(password);
 
         let id = uuid::Uuid::new_v4();
         let master_key = id.simple().to_string();
@@ -180,7 +187,7 @@ where
 
     pub async fn password_recovery_start(
         self,
-        pass_recovery: &PasswordRecovery,
+        pass_recovery: PasswordRecoveryStart,
     ) -> Result<(), AuthError> {
         let user = match self
             .repository
@@ -205,16 +212,10 @@ where
 
     pub async fn password_recovery_finish(
         self,
-        pass_recovery: &PasswordRecovery,
+        pass_recovery: PasswordRecoveryFinish,
     ) -> Result<(), AuthError> {
-        let _user = match self
-            .repository
-            .users_find_by_email(&pass_recovery.email)
-            .await
-        {
-            Some(user) => user,
-            None => return Err(AuthError::UserNotFound),
-        };
+        let password = Self::hash_password(pass_recovery.password);
+        self.repository.users_update_password(1, password).await;
 
         Ok(())
     }
