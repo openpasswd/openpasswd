@@ -23,6 +23,8 @@ pub enum AuthError {
     JwtEncode(String),
     // Create
     EmailAlreadyTaken,
+    // Password Recovery
+    UserNotFound,
 }
 
 impl IntoResponse for AuthError {
@@ -55,6 +57,8 @@ impl IntoResponse for AuthError {
                 StatusCode::BAD_REQUEST,
                 String::from("Email already in use"),
             ),
+            // Password Recovery
+            AuthError::UserNotFound => (StatusCode::BAD_REQUEST, String::from("User not Found")),
         };
         let body = Json(ErrorResponse {
             error: HashMap::from([(String::from("message"), error_message)]),

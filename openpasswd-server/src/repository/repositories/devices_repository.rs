@@ -1,30 +1,26 @@
-use crate::repository::models::device::Device;
-use crate::repository::schema::devices::dsl as devices_dsl;
 use crate::repository::Repository;
-use diesel::prelude::*;
+use async_trait::async_trait;
+use sea_orm::{ColumnTrait, EntityTrait, QueryFilter};
 
+#[async_trait]
 pub trait DevicesRepository {
-    fn devices_find_device_name(&self, user_id: i32, device_name: &str) -> Option<String>;
+    async fn devices_find_device_name(&self, user_id: i32, device_name: &str) -> Option<String>;
 }
+#[async_trait]
 impl DevicesRepository for Repository {
-    fn devices_find_device_name(&self, user_id: i32, device_name: &str) -> Option<String> {
-        let connection = &self.pool.get().unwrap();
-        match devices_dsl::devices
+    async fn devices_find_device_name(&self, user_id: i32, device_name: &str) -> Option<String> {
+        match entity::devices::Entity::find()
             .filter(
-                devices_dsl::user_id
+                entity::devices::Column::UserId
                     .eq(user_id)
-                    .and(devices_dsl::name.eq(device_name)),
+                    .and(entity::devices::Column::Name.eq(device_name)),
             )
-            .load::<Device>(connection)
+            .one(&self.db)
+            .await
+            .unwrap()
         {
-            Ok(result) => {
-                if let Some(next) = result.first() {
-                    Some(next.name.clone())
-                } else {
-                    None
-                }
-            }
-            Err(e) => panic!("{e}"),
+            Some(result) => Some(result.name.clone()),
+            None => None,
         }
     }
 }

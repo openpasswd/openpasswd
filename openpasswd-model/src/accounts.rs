@@ -37,6 +37,6 @@ pub struct AccountView {
 pub struct AccountWithPasswordView {
     pub id: i32,
     pub name: String,
-    pub username: String,
-    pub password: String,
+    pub username: Option<String>,
+    pub password: Option<String>,
 }

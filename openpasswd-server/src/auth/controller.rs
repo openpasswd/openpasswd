@@ -7,7 +7,9 @@ use crate::{
     repository::Repository,
 };
 use axum::{http::StatusCode, response::IntoResponse, Extension, Json};
-use openpasswd_model::auth::{LoginRequest, UserRegister};
+use openpasswd_model::auth::{
+    LoginRequest, PasswordRecoveryFinish, PasswordRecoveryStart, UserRegister,
+};
 
 pub async fn token(
     ValidatedJson(login): ValidatedJson<LoginRequest>,
@@ -35,8 +37,8 @@ pub async fn register(
     Extension(cache): Extension<Cache>,
 ) -> AuthResult<impl IntoResponse> {
     let auth_service = AuthService::new(repository, cache);
-    auth_service.register(&user)?;
-    Ok(StatusCode::CREATED.into_response())
+    auth_service.register(user).await?;
+    Ok(StatusCode::CREATED)
 }
 
 pub async fn get_me(
@@ -45,7 +47,27 @@ pub async fn get_me(
     Extension(cache): Extension<Cache>,
 ) -> AuthResult<impl IntoResponse> {
     let auth_service = AuthService::new(repository, cache);
-    let user = auth_service.get_me(claims.sub)?;
+    let user = auth_service.get_me(claims.sub).await?;
 
     Ok((StatusCode::OK, Json(user)))
+}
+
+pub async fn password_recovery_start(
+    ValidatedJson(pass_recovery): ValidatedJson<PasswordRecoveryStart>,
+    Extension(repository): Extension<Repository>,
+    Extension(cache): Extension<Cache>,
+) -> AuthResult<impl IntoResponse> {
+    let auth_service = AuthService::new(repository, cache);
+    auth_service.password_recovery_start(pass_recovery).await?;
+    Ok(StatusCode::CREATED.into_response())
+}
+
+pub async fn password_recovery_finish(
+    ValidatedJson(pass_recovery): ValidatedJson<PasswordRecoveryFinish>,
+    Extension(repository): Extension<Repository>,
+    Extension(cache): Extension<Cache>,
+) -> AuthResult<impl IntoResponse> {
+    let auth_service = AuthService::new(repository, cache);
+    auth_service.password_recovery_finish(pass_recovery).await?;
+    Ok(StatusCode::OK.into_response())
 }

@@ -1,5 +1,7 @@
 [workspace]
 members = [
+    "entity",
+    "migration",
     "openpasswd-server",
     "openpasswd-model",
 ]

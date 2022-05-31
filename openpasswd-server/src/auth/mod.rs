@@ -15,4 +15,9 @@ pub fn route() -> Router {
         )
         .route("/api/auth/token", post(self::controller::token))
         .route("/api/auth/logout", post(self::controller::logout))
+        .route(
+            "/api/auth/password_recovery",
+            post(self::controller::password_recovery_start)
+                .put(self::controller::password_recovery_finish),
+        )
 }
