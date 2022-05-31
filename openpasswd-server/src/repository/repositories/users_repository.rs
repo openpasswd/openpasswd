@@ -1,4 +1,5 @@
 use crate::repository::models::user::NewUser;
+use crate::repository::models::user_password_recovery::NewUserPasswordRecovery;
 use crate::repository::Repository;
 use async_trait::async_trait;
 use sea_orm::ActiveValue::Set;
@@ -12,7 +13,12 @@ pub trait UsersRepository {
     async fn users_update_fail_attempts(&self, user_id: i32, fail_attempts: i16);
     async fn users_update_password(&self, user_id: i32, password: String);
     async fn users_insert(&self, user: NewUser);
-    // async fn users_password_recovery_list(&self, user_id: i32);
+    async fn users_password_recovery_insert(&self, password_recovery: NewUserPasswordRecovery);
+    async fn users_password_recovery_find_by_token(
+        &self,
+        token: &str,
+    ) -> Option<entity::user_password_recovery::Model>;
+    async fn users_password_recovery_invalide(&self, token: String);
 }
 
 #[async_trait]
@@ -81,6 +87,44 @@ impl UsersRepository for Repository {
             ..Default::default()
         };
         entity::users::Entity::insert(user)
+            .exec(&self.db)
+            .await
+            .unwrap();
+    }
+
+    async fn users_password_recovery_insert(&self, password_recovery: NewUserPasswordRecovery) {
+        let user = entity::user_password_recovery::ActiveModel {
+            user_id: Set(password_recovery.user_id),
+            token: Set(password_recovery.token),
+            issued_at: Set(password_recovery.issued_at),
+            valid: Set(password_recovery.valid),
+            ..Default::default()
+        };
+        entity::user_password_recovery::Entity::insert(user)
+            .exec(&self.db)
+            .await
+            .unwrap();
+    }
+
+    async fn users_password_recovery_find_by_token(
+        &self,
+        token: &str,
+    ) -> Option<entity::user_password_recovery::Model> {
+        entity::user_password_recovery::Entity::find()
+            .filter(entity::user_password_recovery::Column::Token.eq(token))
+            .one(&self.db)
+            .await
+            .unwrap()
+    }
+
+    async fn users_password_recovery_invalide(&self, token: String) {
+        let user = entity::user_password_recovery::ActiveModel {
+            token: Set(token),
+            valid: Set(false),
+            ..Default::default()
+        };
+
+        entity::user_password_recovery::Entity::update(user)
             .exec(&self.db)
             .await
             .unwrap();

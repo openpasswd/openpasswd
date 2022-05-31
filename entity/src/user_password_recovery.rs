@@ -6,9 +6,10 @@ use sea_orm::entity::prelude::*;
 #[sea_orm(table_name = "user_password_recovery")]
 pub struct Model {
     #[sea_orm(primary_key, auto_increment = false)]
-    pub id: Uuid,
+    pub token: String,
     pub user_id: i32,
     pub issued_at: DateTime,
+    pub valid: bool,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

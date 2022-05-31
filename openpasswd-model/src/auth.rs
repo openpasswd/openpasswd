@@ -46,8 +46,8 @@ pub struct PasswordRecoveryStart {
 
 #[derive(Serialize, Deserialize, Validate)]
 pub struct PasswordRecoveryFinish {
-    #[validate(length(min = 1, message = "Ticket is invalid"))]
-    pub ticket: String,
+    #[validate(length(min = 1, message = "Token is invalid"))]
+    pub token: String,
 
     #[validate(length(min = 1, message = "Password is invalid"))]
     pub password: String,

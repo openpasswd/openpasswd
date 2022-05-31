@@ -3,6 +3,7 @@ use super::dto::claims::Claims;
 use crate::core::cache::Cache;
 use crate::core::mail_service::{EmailAddress, MailService, MessageBody};
 use crate::repository::models::user::NewUser;
+use crate::repository::models::user_password_recovery::NewUserPasswordRecovery;
 use crate::repository::repositories::devices_repository::DevicesRepository;
 use crate::repository::repositories::users_repository::UsersRepository;
 use chrono::{TimeZone, Utc};
@@ -13,6 +14,7 @@ use openpasswd_model::auth::{
 };
 use rand::distributions::Alphanumeric;
 use rand::Rng;
+use sha2::{Digest, Sha256};
 
 pub struct AuthService<T>
 where
@@ -30,8 +32,12 @@ where
         AuthService { repository, cache }
     }
 
-    async fn verify(&self, login_password: &str, user: &User) -> AuthResult {
-        if argon2::verify_encoded(&user.password, login_password.as_bytes()).unwrap() {
+    fn verify_password(&self, hash_password: &str, password: &str) -> bool {
+        argon2::verify_encoded(&hash_password, password.as_bytes()).unwrap()
+    }
+
+    async fn verify_user_password(&self, login_password: &str, user: &User) -> AuthResult {
+        if self.verify_password(&user.password, login_password) {
             Ok(())
         } else {
             self.repository
@@ -84,7 +90,7 @@ where
 
         // TODO: count wrong passwords
 
-        self.verify(&login.password, &user).await?;
+        self.verify_user_password(&login.password, &user).await?;
 
         let device_name = self.find_device_name(&login, &user).await;
 
@@ -111,11 +117,13 @@ where
         Ok(token)
     }
 
+    fn generate_string_vec_u8(size: usize) -> Vec<u8> {
+        let mut rng = rand::thread_rng();
+        (&mut rng).sample_iter(Alphanumeric).take(size).collect()
+    }
+
     pub fn hash_password(password: String) -> String {
-        let salt: Vec<u8> = {
-            let mut rng = rand::thread_rng();
-            (&mut rng).sample_iter(Alphanumeric).take(12).collect()
-        };
+        let salt = Self::generate_string_vec_u8(12);
         let config = argon2::Config::default();
 
         argon2::hash_encoded(password.as_bytes(), &salt, &config).unwrap()
@@ -195,14 +203,35 @@ where
             .await
         {
             Some(user) => user,
-            None => return Err(AuthError::UserNotFound),
+            None => {
+                log::warn!("User not found");
+                return Ok(());
+            }
         };
+
+        let token = Self::generate_string_vec_u8(64);
+
+        let hash_token = self.hash(&token);
+
+        let user_password_recovery = NewUserPasswordRecovery {
+            token: hash_token,
+            user_id: user.id,
+            issued_at: chrono::Utc::now().naive_utc(),
+            valid: true,
+        };
+
+        self.repository
+            .users_password_recovery_insert(user_password_recovery)
+            .await;
 
         MailService::send_email(
             EmailAddress::new(Some("OpenPasswd"), "openpasswd@gmail.com"),
             EmailAddress::new(Some(&user.name), &user.email),
             String::from("Password recovery"),
-            MessageBody::Text(String::from("Hello world")),
+            MessageBody::Text(format!(
+                "Password recovery: {}",
+                String::from_utf8(token).unwrap()
+            )),
         )
         .await
         .unwrap();
@@ -210,13 +239,45 @@ where
         Ok(())
     }
 
+    fn hash(&self, data: impl AsRef<[u8]>) -> String {
+        let mut hasher = Sha256::new();
+        hasher.update(data);
+        let hash_token = hasher.finalize();
+        format!("{:x}", hash_token)
+    }
+
     pub async fn password_recovery_finish(
         self,
         pass_recovery: PasswordRecoveryFinish,
     ) -> Result<(), AuthError> {
-        let password = Self::hash_password(pass_recovery.password);
-        self.repository.users_update_password(1, password).await;
+        let token = self.hash(&pass_recovery.token);
 
+        let user_password_recovery = match self
+            .repository
+            .users_password_recovery_find_by_token(&token)
+            .await
+        {
+            Some(user_password_recovery) => user_password_recovery,
+            None => {
+                log::warn!("User not found");
+                return Ok(());
+            }
+        };
+
+        if user_password_recovery.valid
+            && user_password_recovery.issued_at + chrono::Duration::minutes(5)
+                > chrono::Utc::now().naive_utc()
+        {
+            let password = Self::hash_password(pass_recovery.password);
+            self.repository
+                .users_password_recovery_invalide(token)
+                .await;
+            self.repository
+                .users_update_password(user_password_recovery.user_id, password)
+                .await;
+        } else {
+            log::warn!("Invalid password recovery token");
+        }
         Ok(())
     }
 }

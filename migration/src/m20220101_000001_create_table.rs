@@ -52,8 +52,8 @@ fn stmt_user_password_recovery() -> TableCreateStatement {
         .table(entity::user_password_recovery::Entity)
         .if_not_exists()
         .col(
-            ColumnDef::new(entity::user_password_recovery::Column::Id)
-                .uuid()
+            ColumnDef::new(entity::user_password_recovery::Column::Token)
+                .string_len(150)
                 .not_null()
                 .primary_key(),
         )
@@ -64,7 +64,12 @@ fn stmt_user_password_recovery() -> TableCreateStatement {
         )
         .col(
             ColumnDef::new(entity::user_password_recovery::Column::IssuedAt)
-                .date_time()
+                .timestamp()
+                .not_null(),
+        )
+        .col(
+            ColumnDef::new(entity::user_password_recovery::Column::Valid)
+                .boolean()
                 .not_null(),
         )
         .foreign_key(

@@ -28,5 +28,7 @@ jsonwebtoken = "8.0"
 rust-argon2 = "1.0"
 deadpool-redis = "0.10.2"
 lettre = { version = "0.10.0-rc.6", features = [ "tokio1-native-tls" ] }
+sha2 = "0.10.2"
+hex = "0.4.3"
 async-trait = "0.1.53"
 entity = { path = "../entity" }

@@ -1,17 +1,8 @@
-use std::time::SystemTime;
+use chrono::NaiveDateTime;
 
-use uuid::Uuid;
-
-pub struct UserPasswordRecovery {
-    pub id: Uuid,
+pub struct NewUserPasswordRecovery {
     pub user_id: i32,
-    pub issued_at: SystemTime,
+    pub token: String,
+    pub issued_at: NaiveDateTime,
+    pub valid: bool,
 }
-
-// #[derive(Insertable)]
-// #[table_name = "user_password_recovery"]
-// pub struct NewUserPasswordRecovery {
-//     pub id: Uuid,
-//     pub user_id: i32,
-//     pub issued_at: SystemTime,
-// }
