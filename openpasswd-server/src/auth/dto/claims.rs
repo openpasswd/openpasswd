@@ -45,7 +45,7 @@ where
         .map_err(|_| AuthError::InvalidToken)?;
 
         let key = format!(
-            "signed_token:{}:{}",
+            "access_token:{}:{}",
             token_data.claims.sub, token_data.claims.jti
         );
 

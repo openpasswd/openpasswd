@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use validator::Validate;
 
-#[derive(Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 // #[serde(rename_all = "snake_case")]
 pub enum RefreshTokenType {
     #[serde(alias = "Cookie", alias = "cookie")]
