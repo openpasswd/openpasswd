@@ -3,10 +3,16 @@ use super::{
     service::AuthService,
 };
 use crate::{
+    auth::dto::refresh_token::{RefreshTokenRequest, REFRESH_TOKEN_COOKIE_NAME},
     core::{cache::Cache, validator::ValidatedJson},
     repository::Repository,
 };
-use axum::{http::StatusCode, response::IntoResponse, Extension, Json};
+use axum::{
+    http::{header::SET_COOKIE, HeaderMap, StatusCode},
+    response::IntoResponse,
+    Extension, Json,
+};
+use log::info;
 use openpasswd_model::auth::{
     LoginRequest, PasswordRecoveryFinish, PasswordRecoveryStart, UserRegister,
 };
@@ -18,7 +24,25 @@ pub async fn token(
 ) -> AuthResult<impl IntoResponse> {
     let auth_service = AuthService::new(repository, cache);
     let access_token = auth_service.login(&login).await?;
-    Ok((StatusCode::OK, Json(access_token)))
+
+    let cookie = cookie::Cookie::build(REFRESH_TOKEN_COOKIE_NAME, uuid::Uuid::new_v4().to_string())
+        .domain("localhost")
+        .path("/")
+        .secure(true)
+        .http_only(true)
+        .max_age(cookie::time::Duration::hours(1))
+        .finish();
+
+    let mut headers = HeaderMap::new();
+    headers.insert(SET_COOKIE, cookie.to_string().parse().unwrap());
+
+    Ok((StatusCode::OK, headers, Json(access_token)))
+}
+
+pub async fn refresh_token(refresh_token: RefreshTokenRequest) -> AuthResult<impl IntoResponse> {
+    info!("{:?}", refresh_token);
+
+    Ok(StatusCode::OK)
 }
 
 pub async fn logout(

@@ -112,6 +112,7 @@ where
         let token = AccessToken {
             access_token: signed_token,
             token_type: String::from("Bearer"),
+            refresh_token: None,
         };
 
         Ok(token)

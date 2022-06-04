@@ -4,7 +4,7 @@ use crate::{
 };
 use axum::{
     handler::Handler,
-    http::{HeaderValue, Method, StatusCode},
+    http::{header, HeaderValue, Method, StatusCode},
     response::IntoResponse,
     routing::get,
     Extension, Router,
@@ -40,14 +40,14 @@ async fn main() {
         .fallback(handler_404.into_service());
 
     if let Ok(allow_origin) = std::env::var("CORS_ALLOW_ORIGIN") {
-        let mut cors = CorsLayer::new().allow_headers(Any).allow_methods(vec![
-            Method::GET,
-            Method::POST,
-            Method::DELETE,
-        ]);
+        let mut cors = CorsLayer::new()
+            .allow_credentials(true)
+            .allow_headers([header::AUTHORIZATION, header::ACCEPT, header::CONTENT_TYPE])
+            .allow_methods(vec![Method::GET, Method::POST, Method::DELETE]);
 
         if allow_origin == "*" {
-            cors = cors.allow_origin(Any);
+            // cors = cors.allow_origin(Any);
+            cors = cors.allow_origin("http://localhost:3000".parse::<HeaderValue>().unwrap())
         } else {
             cors = cors.allow_origin(allow_origin.parse::<HeaderValue>().unwrap())
         }
