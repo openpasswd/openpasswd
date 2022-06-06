@@ -64,7 +64,6 @@ where
         device_name: Option<String>,
         expire_at: chrono::Duration,
     ) -> AuthResult<(String, String)> {
-        let secret = std::env::var("JWT_SECRET").expect("JWT_SECRET must be set");
         let exp = chrono::Utc::now()
             .checked_add_signed(expire_at)
             .expect("valid timestamp")
@@ -77,6 +76,8 @@ where
             device: device_name,
             exp,
         };
+
+        let secret = std::env::var("JWT_SECRET").expect("JWT_SECRET must be set");
         Ok((self.sign_token(claims, secret)?, jti))
     }
 
@@ -87,7 +88,6 @@ where
         expire_at: chrono::Duration,
         refresh_token_type: &RefreshTokenType,
     ) -> AuthResult<(String, String)> {
-        let secret = std::env::var("JWT_SECRET").expect("JWT_SECRET must be set");
         let exp = chrono::Utc::now()
             .checked_add_signed(expire_at)
             .expect("valid timestamp")
@@ -109,7 +109,6 @@ where
 
     fn sign_token<C: serde::Serialize>(&self, claims: C, secret: String) -> AuthResult<String> {
         let header = jsonwebtoken::Header::new(jsonwebtoken::Algorithm::HS512);
-        // let secret = std::env::var("JWT_SECRET").expect("JWT_SECRET must be set");
         let token = jsonwebtoken::encode(
             &header,
             &claims,

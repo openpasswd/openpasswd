@@ -12,10 +12,22 @@ use axum::{
     response::IntoResponse,
     Extension, Json,
 };
-use log::info;
+
 use openpasswd_model::auth::{
     LoginRequest, PasswordRecoveryFinish, PasswordRecoveryStart, RefreshTokenType, UserRegister,
 };
+
+fn get_refresh_token_cookie(refresh_token: &str) -> String {
+    cookie::Cookie::build(REFRESH_TOKEN_COOKIE_NAME, refresh_token)
+        .domain(std::env::var("DOMAIN").expect("DOMAIN not set"))
+        .path("/")
+        .same_site(cookie::SameSite::None)
+        .secure(true)
+        .http_only(true)
+        .max_age(cookie::time::Duration::minutes(5))
+        .finish()
+        .to_string()
+}
 
 pub async fn token(
     ValidatedJson(login): ValidatedJson<LoginRequest>,
@@ -29,15 +41,8 @@ pub async fn token(
     match login.refresh_token {
         Some(RefreshTokenType::Cookie) => {
             if let Some(refresh_token) = access_token.refresh_token.take() {
-                let cookie = cookie::Cookie::build(REFRESH_TOKEN_COOKIE_NAME, refresh_token)
-                    .domain("localhost")
-                    .path("/")
-                    .secure(true)
-                    .http_only(true)
-                    .max_age(cookie::time::Duration::minutes(5))
-                    .finish();
-
-                headers.insert(SET_COOKIE, cookie.to_string().parse().unwrap());
+                let cookie = get_refresh_token_cookie(&refresh_token);
+                headers.insert(SET_COOKIE, cookie.parse().unwrap());
             }
         }
         _ => (),
@@ -58,15 +63,8 @@ pub async fn refresh_token(
     match refresh_token.refresh_token_type {
         RefreshTokenType::Cookie => {
             if let Some(refresh_token) = access_token.refresh_token.take() {
-                let cookie = cookie::Cookie::build(REFRESH_TOKEN_COOKIE_NAME, refresh_token)
-                    .domain("localhost")
-                    .path("/")
-                    .secure(true)
-                    .http_only(true)
-                    .max_age(cookie::time::Duration::minutes(5))
-                    .finish();
-
-                headers.insert(SET_COOKIE, cookie.to_string().parse().unwrap());
+                let cookie = get_refresh_token_cookie(&refresh_token);
+                headers.insert(SET_COOKIE, cookie.parse().unwrap());
             }
         }
         _ => (),
