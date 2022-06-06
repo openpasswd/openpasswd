@@ -12,7 +12,7 @@ use axum::{
 use dotenvy::dotenv;
 use std::net::SocketAddr;
 use tokio::signal;
-use tower_http::cors::{Any, CorsLayer};
+use tower_http::cors::{CorsLayer};
 
 mod accounts;
 mod auth;
