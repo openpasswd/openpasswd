@@ -510,6 +510,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "245097e9a4535ee1e3e3931fcfcd55a796a44c643e8596ff6566d68f09b87bbc"
 
 [[package]]
+name = "cookie"
+version = "0.16.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "94d4706de1b0fa5b132270cddffa8585166037822e260a944fe161acd137ca05"
+dependencies = [
+ "time 0.3.9",
+ "version_check",
+]
+
+[[package]]
 name = "core-foundation"
 version = "0.9.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1366,6 +1376,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "model"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "validator",
+]
+
+[[package]]
 name = "native-tls"
 version = "0.2.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1504,12 +1522,8 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "624a8340c38c1b80fd549087862da4ba43e08858af025b236e509b6649fc13d5"
 
 [[package]]
-name = "openpasswd-model"
+name = "openpasswd-cli"
 version = "0.1.0"
-dependencies = [
- "serde",
- "validator",
-]
 
 [[package]]
 name = "openpasswd-server"
@@ -1520,6 +1534,7 @@ dependencies = [
  "axum",
  "base64",
  "chrono",
+ "cookie",
  "deadpool-redis",
  "dotenvy",
  "entity",
@@ -1527,7 +1542,7 @@ dependencies = [
  "jsonwebtoken",
  "lettre",
  "log",
- "openpasswd-model",
+ "model",
  "pretty_env_logger",
  "rand",
  "redis",

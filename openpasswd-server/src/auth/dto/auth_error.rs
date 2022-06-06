@@ -5,7 +5,7 @@ use axum::{
     response::{IntoResponse, Response},
     Json,
 };
-use openpasswd_model::error::ErrorResponse;
+use model::error::ErrorResponse;
 
 pub type AuthResult<T = ()> = Result<T, AuthError>;
 

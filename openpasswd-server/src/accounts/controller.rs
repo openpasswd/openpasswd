@@ -8,10 +8,10 @@ use axum::{
     response::IntoResponse,
     Extension, Json,
 };
-use openpasswd_model::accounts::{AccountGroupRegister, AccountRegister};
+use model::accounts::{AccountGroupRegister, AccountRegister};
 
 // use axum::{extract::Path, http::StatusCode, response::IntoResponse, Json};
-// use openpasswd_model::{accounts::AccountView, List};
+// use model::{accounts::AccountView, List};
 // use rsa::{pkcs8::EncodePrivateKey, PublicKey};
 
 pub async fn register_group(

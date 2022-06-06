@@ -4,7 +4,7 @@ use crate::{
 };
 use axum::{
     handler::Handler,
-    http::{HeaderValue, Method, StatusCode},
+    http::{header, HeaderValue, Method, StatusCode},
     response::IntoResponse,
     routing::get,
     Extension, Router,
@@ -12,7 +12,7 @@ use axum::{
 use dotenvy::dotenv;
 use std::net::SocketAddr;
 use tokio::signal;
-use tower_http::cors::{Any, CorsLayer};
+use tower_http::cors::{CorsLayer};
 
 mod accounts;
 mod auth;
@@ -40,17 +40,11 @@ async fn main() {
         .fallback(handler_404.into_service());
 
     if let Ok(allow_origin) = std::env::var("CORS_ALLOW_ORIGIN") {
-        let mut cors = CorsLayer::new().allow_headers(Any).allow_methods(vec![
-            Method::GET,
-            Method::POST,
-            Method::DELETE,
-        ]);
-
-        if allow_origin == "*" {
-            cors = cors.allow_origin(Any);
-        } else {
-            cors = cors.allow_origin(allow_origin.parse::<HeaderValue>().unwrap())
-        }
+        let cors = CorsLayer::new()
+            .allow_credentials(true)
+            .allow_headers([header::AUTHORIZATION, header::ACCEPT, header::CONTENT_TYPE])
+            .allow_methods(vec![Method::GET, Method::POST, Method::DELETE])
+            .allow_origin(allow_origin.parse::<HeaderValue>().unwrap());
 
         app = app.layer(cors);
     }
