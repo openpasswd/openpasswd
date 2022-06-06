@@ -1376,6 +1376,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "model"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "validator",
+]
+
+[[package]]
 name = "native-tls"
 version = "0.2.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1514,12 +1522,8 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "624a8340c38c1b80fd549087862da4ba43e08858af025b236e509b6649fc13d5"
 
 [[package]]
-name = "openpasswd-model"
+name = "openpasswd-cli"
 version = "0.1.0"
-dependencies = [
- "serde",
- "validator",
-]
 
 [[package]]
 name = "openpasswd-server"
@@ -1538,7 +1542,7 @@ dependencies = [
  "jsonwebtoken",
  "lettre",
  "log",
- "openpasswd-model",
+ "model",
  "pretty_env_logger",
  "rand",
  "redis",

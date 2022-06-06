@@ -7,7 +7,7 @@ use axum::{
     response::{IntoResponse, Response},
     BoxError, Json,
 };
-use openpasswd_model::error::ErrorResponse;
+use model::error::ErrorResponse;
 use serde::de::DeserializeOwned;
 use validator::Validate;
 

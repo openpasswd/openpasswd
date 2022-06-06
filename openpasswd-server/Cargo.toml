@@ -3,10 +3,9 @@ name = "openpasswd-server"
 version = "0.1.0"
 edition = "2021"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [dependencies]
-openpasswd-model = { path = "../openpasswd-model" }
+model = { path = "../model" }
+entity = { path = "../entity" }
 sea-orm = { version = "0.8.0", features = [ "sqlx-postgres", "runtime-tokio-native-tls", "macros" ] }
 axum = { version = "0.5.1", features = [ "headers" ] }
 # axum-macros = "0.2.2"
@@ -32,4 +31,3 @@ lettre = { version = "0.10.0-rc.6", features = [ "tokio1-native-tls" ] }
 sha2 = "0.10.2"
 hex = "0.4.3"
 async-trait = "0.1.53"
-entity = { path = "../entity" }

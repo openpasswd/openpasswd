@@ -13,7 +13,7 @@ use axum::{
     Extension, Json,
 };
 
-use openpasswd_model::auth::{
+use model::auth::{
     LoginRequest, PasswordRecoveryFinish, PasswordRecoveryStart, RefreshTokenType, UserRegister,
 };
 

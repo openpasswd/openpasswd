@@ -2,10 +2,10 @@ use crate::core::cryptography::{AesGcmCipher, Cipher};
 use crate::repository::models::account::{NewAccount, NewAccountGroup, NewAccountPassword};
 use crate::repository::repositories::accounts_repository::AccountsRepository;
 use crate::repository::repositories::users_repository::UsersRepository;
-use openpasswd_model::accounts::{
+use model::accounts::{
     AccountGroupRegister, AccountGroupView, AccountRegister, AccountView, AccountWithPasswordView,
 };
-use openpasswd_model::List;
+use model::List;
 
 use super::dto::accounts_error::{AccountError, AccountResult};
 

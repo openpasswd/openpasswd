@@ -9,7 +9,7 @@ use crate::repository::repositories::devices_repository::DevicesRepository;
 use crate::repository::repositories::users_repository::UsersRepository;
 use chrono::{TimeZone, Utc};
 use entity::users::Model as User;
-use openpasswd_model::auth::{
+use model::auth::{
     AccessToken, LoginRequest, PasswordRecoveryFinish, PasswordRecoveryStart, RefreshTokenType,
     UserRegister, UserView,
 };

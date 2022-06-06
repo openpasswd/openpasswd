@@ -2,6 +2,9 @@
 members = [
     "entity",
     "migration",
+    "model",
     "openpasswd-server",
-    "openpasswd-model",
+    "openpasswd-cli"
 ]
+
+default-members = [ "openpasswd-cli" ]

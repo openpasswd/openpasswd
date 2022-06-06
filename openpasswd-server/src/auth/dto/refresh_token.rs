@@ -4,7 +4,7 @@ use axum::{
     headers::Cookie,
     BoxError, Json,
 };
-use openpasswd_model::auth::RefreshTokenType;
+use model::auth::RefreshTokenType;
 use serde::{Deserialize, Serialize};
 
 use crate::core::cache::Cache;
@@ -51,7 +51,7 @@ where
         let (token, refresh_token_type) = if let Some(refresh_token) = refresh_token {
             (refresh_token.to_owned(), RefreshTokenType::Cookie)
         } else {
-            let Json(value) = Json::<openpasswd_model::auth::RefreshToken>::from_request(req)
+            let Json(value) = Json::<model::auth::RefreshToken>::from_request(req)
                 .await
                 .map_err(|_| AuthError::MissingCredentials)?;
 
