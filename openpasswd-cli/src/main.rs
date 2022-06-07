@@ -6,6 +6,7 @@ use copypasta::{ClipboardContext, ClipboardProvider};
 use login::Login;
 
 mod accounts;
+mod api;
 mod login;
 
 /// A fictional versioning CLI
@@ -24,7 +25,8 @@ enum Commands {
     Test,
 }
 
-fn main() {
+#[tokio::main]
+async fn main() {
     let args = Cli::parse();
 
     match args.command {
