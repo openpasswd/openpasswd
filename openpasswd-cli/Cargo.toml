@@ -6,7 +6,10 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+model = { path = "../model" }
 clap = { version = "3.1.18", features = ["derive"] }
 tokio = { version = "1.19.2", features = ["full"] }
+reqwest = { version = "0.11", features = ["json"] }
 copypasta = "0.7.1"
 rpassword = "6.0.1"
+directories = "4.0.1"

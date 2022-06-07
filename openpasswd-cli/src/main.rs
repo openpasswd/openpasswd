@@ -30,7 +30,7 @@ async fn main() {
     let args = Cli::parse();
 
     match args.command {
-        Commands::Login(login) => login.execute(),
+        Commands::Login(login) => login.execute().await,
         Commands::Account(account) => account.execute(),
         Commands::Test => test(),
     }
