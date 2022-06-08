@@ -97,6 +97,19 @@ impl MailService {
         }
     }
 
+    pub async fn send_email_from_system(
+        to: EmailAddress,
+        subject: String,
+        message_body: MessageBody,
+    ) -> Result<(), MailError> {
+        let from = match (std::env::var("EMAIL_NAME"), std::env::var("EMAIL_FROM")) {
+            (name, Ok(from)) => EmailAddress::new(name.ok().as_deref(), &from),
+            _ => return Err(MailError::EmailError(lettre::error::Error::MissingFrom)),
+        };
+
+        Self::send_email(from, to, subject, message_body).await
+    }
+
     pub async fn send_email(
         from: EmailAddress,
         to: EmailAddress,

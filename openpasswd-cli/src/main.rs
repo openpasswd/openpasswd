@@ -2,12 +2,14 @@ extern crate copypasta;
 
 use accounts::Accounts;
 use clap::{Parser, Subcommand};
-use copypasta::{ClipboardContext, ClipboardProvider};
+use generator::Generator;
 use login::Login;
 
 mod accounts;
 mod api;
+mod generator;
 mod login;
+mod profile;
 
 /// A fictional versioning CLI
 #[derive(Debug, Parser)]
@@ -22,7 +24,7 @@ struct Cli {
 enum Commands {
     Login(Login),
     Account(Accounts),
-    Test,
+    Generator(Generator),
 }
 
 #[tokio::main]
@@ -31,21 +33,7 @@ async fn main() {
 
     match args.command {
         Commands::Login(login) => login.execute().await,
-        Commands::Account(account) => account.execute(),
-        Commands::Test => test(),
+        Commands::Account(account) => account.execute().await,
+        Commands::Generator(generator) => generator.execute(),
     }
-}
-
-fn test() {
-    let the_string = "Test Sample!".to_owned();
-
-    let mut ctx = ClipboardContext::new().unwrap();
-    ctx.set_contents(the_string).unwrap();
-
-    let seconds = 5;
-    println!("Password ready do be pasted for {seconds} seconds");
-    std::thread::sleep(std::time::Duration::from_secs(seconds));
-    ctx.set_contents("".to_owned()).unwrap();
-    println!("Clipboard unset");
-    std::thread::sleep(std::time::Duration::from_secs(1));
 }

@@ -12,7 +12,7 @@ use axum::{
 use dotenvy::dotenv;
 use std::net::SocketAddr;
 use tokio::signal;
-use tower_http::cors::{CorsLayer};
+use tower_http::cors::CorsLayer;
 
 mod accounts;
 mod auth;
@@ -81,9 +81,12 @@ async fn cache_check(Extension(cache): Extension<Cache>) -> impl IntoResponse {
 }
 
 async fn mail_check() -> impl IntoResponse {
-    match MailService::send_email(
-        EmailAddress::new(Some("nobody"), "nobody@domain.tld"),
-        EmailAddress::new(Some("nobody"), "nobody@domain.tld"),
+    let to = match (std::env::var("EMAIL_NAME"), std::env::var("EMAIL_FROM")) {
+        (name, Ok(from)) => EmailAddress::new(name.ok().as_deref(), &from),
+        _ => panic!("Don't know what to do!"),
+    };
+    match MailService::send_email_from_system(
+        to,
         String::from("Mail Check"),
         core::mail_service::MessageBody::Text(String::from("Hello world")),
     )

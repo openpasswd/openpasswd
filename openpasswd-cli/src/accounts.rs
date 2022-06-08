@@ -1,5 +1,7 @@
 use clap::{Args, Subcommand};
 
+use crate::{api::OpenPasswdApi, profile::Profile};
+
 #[derive(Debug, Subcommand)]
 enum AccountsCommands {
     List,
@@ -14,10 +16,24 @@ pub struct Accounts {
 }
 
 impl Accounts {
-    pub fn execute(&self) {
+    pub async fn execute(&self) {
         match &self.command {
-            AccountsCommands::List => println!("List Groups"),
+            AccountsCommands::List => self.list().await,
             AccountsCommands::Create { name } => println!("Create Group: {name}"),
+        }
+    }
+
+    async fn list(&self) {
+        let profile = Profile::new();
+        let mut api = OpenPasswdApi::new();
+        if let Some(access_token) = profile.access_token() {
+            api.set_access_token(access_token.to_owned());
+        }
+
+        let list = api.list_groups().await.unwrap();
+
+        for item in list.items {
+            println!("- {}", item.name);
         }
     }
 }
