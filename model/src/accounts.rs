@@ -7,7 +7,7 @@ pub struct AccountGroupRegister {
     pub name: String,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize)]
 pub struct AccountGroupView {
     pub id: i32,
     pub name: String,
@@ -26,14 +26,14 @@ pub struct AccountRegister {
     pub password: String,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize)]
 pub struct AccountView {
     pub id: i32,
     pub name: String,
     pub group_id: i32,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize)]
 pub struct AccountWithPasswordView {
     pub id: i32,
     pub name: String,

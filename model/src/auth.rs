@@ -10,7 +10,7 @@ pub enum RefreshTokenType {
     Token,
 }
 
-#[derive(Deserialize, Validate, Debug)]
+#[derive(Serialize, Deserialize, Validate, Debug)]
 pub struct LoginRequest {
     #[validate(length(min = 1))]
     #[validate(email(message = "Email is invalid"))]
@@ -32,7 +32,7 @@ pub struct UserRegister {
     pub password: String,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize)]
 pub struct AccessToken {
     pub access_token: String,
     #[serde(rename = "type")]
@@ -63,7 +63,7 @@ pub struct PasswordRecoveryFinish {
     pub password: String,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct RefreshToken {
     pub refresh_token: String,
 }
