@@ -9,7 +9,6 @@ pub struct Model {
     pub id: i32,
     pub user_id: i32,
     pub account_groups_id: i32,
-    pub level: Option<i16>,
     pub name: String,
 }
 

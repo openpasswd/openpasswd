@@ -140,7 +140,6 @@ fn stmt_accounts() -> TableCreateStatement {
                 .integer()
                 .not_null(),
         )
-        .col(ColumnDef::new(entity::accounts::Column::Level).small_integer())
         .col(
             ColumnDef::new(entity::accounts::Column::Name)
                 .string_len(50)

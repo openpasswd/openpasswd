@@ -91,7 +91,6 @@ impl AccountsRepository for Repository {
         let account = entity::accounts::ActiveModel {
             name: Set(account.name),
             user_id: Set(account.user_id),
-            level: Set(account.level),
             account_groups_id: Set(account.account_groups_id),
             ..Default::default()
         };
