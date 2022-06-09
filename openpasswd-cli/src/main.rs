@@ -3,11 +3,16 @@ extern crate copypasta;
 use accounts::Accounts;
 use clap::{Parser, Subcommand};
 use generator::Generator;
+use groups::Groups;
 use login::Login;
+use profile::Profile;
+use std::{cell::RefCell, rc::Rc};
 
 mod accounts;
 mod api;
+mod clipboard;
 mod generator;
+mod groups;
 mod login;
 mod profile;
 
@@ -24,16 +29,19 @@ struct Cli {
 enum Commands {
     Login(Login),
     Account(Accounts),
+    Group(Groups),
     Generator(Generator),
 }
 
 #[tokio::main]
 async fn main() {
     let args = Cli::parse();
+    let profile = Rc::new(RefCell::new(Profile::new()));
 
     match args.command {
-        Commands::Login(login) => login.execute().await,
-        Commands::Account(account) => account.execute().await,
+        Commands::Login(login) => login.execute(profile).await,
+        Commands::Account(account) => account.execute(profile).await,
+        Commands::Group(group) => group.execute(profile).await,
         Commands::Generator(generator) => generator.execute(),
     }
 }

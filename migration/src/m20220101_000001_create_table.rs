@@ -166,6 +166,13 @@ fn stmt_accounts() -> TableCreateStatement {
                 .on_delete(ForeignKeyAction::NoAction)
                 .on_update(ForeignKeyAction::NoAction),
         )
+        .index(
+            Index::create()
+                .col(entity::accounts::Column::Id)
+                .col(entity::accounts::Column::AccountGroupsId)
+                .col(entity::accounts::Column::Name)
+                .unique(),
+        )
         .to_owned()
 }
 
