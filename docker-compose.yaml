@@ -5,11 +5,24 @@ services:
       - 7777:7777
     environment:
       - DATABASE_URL=postgres://open:passwd@postgres:5432/openpasswd
+      - DATABASE_POOL_SIZE=15
       - RUST_LOG=info
       - JWT_SECRET=openpasswd
-      - DATABASE_POOL_SIZE=15
-      - CORS_ALLOW_ORIGIN=*
+      - JWT_REFRES_TOKEN_SECRET=dwssapnepo
+      - DOMAIN=localhost
+      - CORS_ALLOW_ORIGIN=http://localhost:3000
       - REDIS_URL=redis://redis:6379/
+      - SMTP_SERVER=mailhog
+      - SMTP_PORT=1025
+      - SMTP_TLS=false
+      - SMTP_USERNAME=
+      - SMTP_PASSWORD=
+      - EMAIL_NAME=
+      - EMAIL_FROM=
+    depends_on:
+      - redis
+      - postgres
+      - mailhog
   redis:
     image: redis:7-alpine
     ports:
