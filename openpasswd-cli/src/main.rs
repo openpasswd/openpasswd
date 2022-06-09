@@ -27,7 +27,7 @@ struct Cli {
 
 #[derive(Debug, Subcommand)]
 enum Commands {
-    Login(Login),
+    // Login(Login),
     Account(Accounts),
     Group(Groups),
     Generator(Generator),
@@ -38,8 +38,12 @@ async fn main() {
     let args = Cli::parse();
     let profile = Rc::new(RefCell::new(Profile::new()));
 
+    if profile.borrow().is_token_expired() {
+        Login::new().execute(profile.clone()).await
+    }
+
     match args.command {
-        Commands::Login(login) => login.execute(profile).await,
+        // Commands::Login(login) => login.execute(profile).await,
         Commands::Account(account) => account.execute(profile).await,
         Commands::Group(group) => group.execute(profile).await,
         Commands::Generator(generator) => generator.execute(),

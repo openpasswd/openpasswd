@@ -89,4 +89,24 @@ impl Profile {
     pub fn refresh_token(&self) -> Option<&str> {
         self.refresh_token.as_deref()
     }
+
+    pub fn is_token_expired(&self) -> bool {
+        if let Some(access_token) = self.access_token.as_ref() {
+            let mut validation = jsonwebtoken::Validation::new(jsonwebtoken::Algorithm::HS512);
+            validation.insecure_disable_signature_validation();
+            match jsonwebtoken::decode::<serde_json::Value>(
+                access_token,
+                &jsonwebtoken::DecodingKey::from_secret(&[]),
+                &validation,
+            ) {
+                Err(e) => match e.kind() {
+                    jsonwebtoken::errors::ErrorKind::ExpiredSignature => true,
+                    _ => false,
+                },
+                _ => false,
+            }
+        } else {
+            true
+        }
+    }
 }

@@ -26,6 +26,10 @@ pub struct Login {
 }
 
 impl Login {
+    pub fn new() -> Login {
+        Login { clean: false }
+    }
+
     pub async fn execute(&self, profile: Rc<RefCell<Profile>>) {
         let api = OpenPasswdApi::new(profile.clone());
         let email = {
