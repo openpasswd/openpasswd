@@ -1788,6 +1788,7 @@ dependencies = [
  "jsonwebtoken",
  "lettre",
  "log",
+ "migration",
  "model",
  "pretty_env_logger",
  "rand",

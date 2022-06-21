@@ -26,7 +26,7 @@ async fn main() {
     pretty_env_logger::init();
 
     let repository = Repository::new().await;
-    repository.migration_run();
+    repository.migration_run().await;
 
     let cache = Cache::new().unwrap();
 

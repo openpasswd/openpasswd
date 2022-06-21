@@ -1,9 +1,7 @@
 use log::{info, warn};
 use sea_orm::{ConnectOptions, Database, DatabaseConnection};
 
-// TODO:
-// diesel_migrations::embed_migrations!("../migrations");
-
+use migration::{Migrator, MigratorTrait};
 pub struct Repository {
     pub db: DatabaseConnection,
 }
@@ -23,12 +21,11 @@ impl Repository {
         }
     }
 
-    pub fn migration_run(&self) {
-        // TODO:
-        // info!("Applying migrations");
-        // let conn = self.pool.get().unwrap();
-        // embedded_migrations::run(&conn).unwrap();
-        // // embedded_migrations::run_with_output(&conn, &mut std::io::stdout()).unwrap();
+    pub async fn migration_run(&self) {
+        info!("Applying migrations");
+        Migrator::up(&self.db, None)
+            .await
+            .expect("Could not apply migrations");
     }
 }
 

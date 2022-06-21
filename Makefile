@@ -9,7 +9,7 @@ docker_dev_up:
 docker_test_up:
 	docker-compose up -d
 docker_down:
-	docker-compose up -d
+	docker-compose down
 build:
 	cargo build -p openpasswd-server
 run:
