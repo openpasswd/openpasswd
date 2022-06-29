@@ -43,7 +43,7 @@ async fn main() {
         let cors = CorsLayer::new()
             .allow_credentials(true)
             .allow_headers([header::AUTHORIZATION, header::ACCEPT, header::CONTENT_TYPE])
-            .allow_methods(vec![Method::GET, Method::POST, Method::DELETE])
+            .allow_methods(vec![Method::GET, Method::POST, Method::PUT, Method::DELETE])
             .allow_origin(allow_origin.parse::<HeaderValue>().unwrap());
 
         app = app.layer(cors);
