@@ -28,7 +28,7 @@ pub struct UserRegister {
     #[validate(length(min = 1, message = "Email is invalid"))]
     #[validate(email(message = "Email is invalid"))]
     pub email: String,
-    #[validate(length(min = 1, message = "Password is invalid"))]
+    #[validate(length(min = 8, message = "Password is invalid"))]
     pub password: String,
 }
 
